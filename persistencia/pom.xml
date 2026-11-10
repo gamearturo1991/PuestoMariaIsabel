@@ -101,7 +101,7 @@
 
         <!-- Dependencia interna -->
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>Puesto.maria.isabel</groupId>
             <artifactId>entidad</artifactId>
             <version>${project.version}</version>
         </dependency>

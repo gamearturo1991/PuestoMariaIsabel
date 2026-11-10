@@ -26,14 +26,14 @@
 
         <!-- Proyecto interno -->
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>Puesto.maria.isabel</groupId>
             <artifactId>entidad</artifactId>
             <version>${project.version}</version>
         </dependency>
 
 
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>Puesto.maria.isabel</groupId>
             <artifactId>persistencia</artifactId>
             <version>${project.version}</version>
         </dependency>
