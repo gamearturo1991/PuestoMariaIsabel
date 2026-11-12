@@ -1,0 +1,74 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+    <title><ui:insert name="titulo">Sistema</ui:insert> · Refresquería María Isabel</title>
+    <h:outputStylesheet name="layout.css" />
+    <ui:insert name="head" />
+</h:head>
+
+<h:body styleClass="app-body">
+    <f:event type="preRenderView" listener="#{menuUI.verificarSesion}" />
+
+    <div class="app-shell">
+
+        <!-- ===== Barra lateral ===== -->
+        <aside class="sidebar">
+            <div class="brand">
+                <svg class="brand-logo" viewBox="0 0 32 32" aria-hidden="true">
+                    <rect width="32" height="32" rx="8" fill="#E3F2F3" />
+                    <path d="M10 8h12l-1.5 17a2 2 0 0 1-2 1.8h-5a2 2 0 0 1-2-1.8L10 8z" fill="#0E7C86" />
+                    <path d="M17 3l1.5 5" stroke="#0E7C86" stroke-width="2" stroke-linecap="round" />
+                    <rect x="11" y="13" width="10" height="2" fill="#E3F2F3" />
+                </svg>
+                <div class="brand-text">
+                    <span>Refresquería</span>
+                    <span>María Isabel</span>
+                </div>
+            </div>
+
+            <nav class="nav">
+                <ui:repeat value="#{menuUI.items}" var="item">
+                    <h:link outcome="#{item.url}" value="#{item.etiqueta}"
+                            rendered="#{item.disponible}"
+                            styleClass="nav-item #{menuUI.esActivo(item) ? 'activo' : ''}" />
+                    <h:outputText value="#{item.etiqueta}" rendered="#{not item.disponible}"
+                                  styleClass="nav-item deshabilitado" title="Próximamente" />
+                </ui:repeat>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-name">#{menuUI.nombreUsuario}</div>
+                <h:form>
+                    <p:commandLink value="Cerrar sesión" action="#{menuUI.cerrarSesion}"
+                                   styleClass="logout" ajax="false" />
+                </h:form>
+            </div>
+        </aside>
+
+        <!-- ===== Zona principal ===== -->
+        <div class="main">
+            <header class="topbar">
+                <h1 class="page-title"><ui:insert name="titulo">Sistema</ui:insert></h1>
+                <div class="topbar-right">
+                    <h:panelGroup layout="block" styleClass="pill pill-alertas" rendered="#{menuUI.alertas gt 0}">
+                        <span class="dot"></span>
+                        <h:outputText value="#{menuUI.alertas} alertas" />
+                    </h:panelGroup>
+                    <span class="pill pill-fecha">#{menuUI.fechaHoy}</span>
+                </div>
+            </header>
+
+            <main class="content">
+                <ui:insert name="contenido" />
+            </main>
+        </div>
+    </div>
+</h:body>
+</html>
