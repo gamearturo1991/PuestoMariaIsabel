@@ -15,14 +15,10 @@ public class Producto {
     @Column(name = "id_producto", nullable = false)
     private Integer id;
 
-    @Size(max = 100)
+    @Size(max = 50)
     @NotNull
-    @Column(name = "sku", nullable = false, length = 100)
-    private String sku;
-
-    @Size(max = 100)
-    @Column(name = "codigo_barras", length = 100)
-    private String codigoBarras;
+    @Column(name = "codigo_corto", nullable = false, unique = true, length = 50)
+    private String codigoCorto;
 
     @Size(max = 255)
     @NotNull
@@ -71,20 +67,12 @@ public class Producto {
         this.id = id;
     }
 
-    public String getSku() {
-        return sku;
+    public String getCodigoCorto() {
+        return codigoCorto;
     }
 
-    public void setSku(String sku) {
-        this.sku = sku;
-    }
-
-    public String getCodigoBarras() {
-        return codigoBarras;
-    }
-
-    public void setCodigoBarras(String codigoBarras) {
-        this.codigoBarras = codigoBarras;
+    public void setCodigoCorto(String codigoCorto) {
+        this.codigoCorto = codigoCorto;
     }
 
     public String getNombre() {
