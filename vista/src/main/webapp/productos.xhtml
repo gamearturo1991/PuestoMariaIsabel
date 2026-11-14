@@ -28,6 +28,7 @@
                     </p:inputText>
                 </span>
 
+
                 <p:selectBooleanCheckbox id="verDes" value="#{productoUI.verDeshabilitados}"
                                          itemLabel="Mostrar deshabilitados">
                     <p:ajax listener="#{productoUI.cargar}" update="tabla" />
@@ -37,7 +38,7 @@
 
                 <p:commandButton value="Nuevo producto" icon="pi pi-plus"
                                  actionListener="#{productoUI.nuevo}"
-                                 process="@this" update=":formDialogo"
+                                 process="@this" update=":dlgProd"
                                  oncomplete="PF('dlgProducto').show()" />
             </div>
 
@@ -83,7 +84,7 @@
                     <p:commandButton icon="pi pi-pencil" title="Modificar"
                                      styleClass="rounded-button ui-button-flat"
                                      actionListener="#{productoUI.editar(pr)}"
-                                     process="@this" update=":formDialogo"
+                                     process="@this" update=":dlgProd"
                                      oncomplete="PF('dlgProducto').show()" />
                     <p:commandButton icon="pi pi-ban" title="Deshabilitar"
                                      styleClass="rounded-button ui-button-flat ui-button-danger"
@@ -104,7 +105,7 @@
         </h:form>
 
         <!-- ===== Formulario: registrar / modificar ===== -->
-        <p:dialog widgetVar="dlgProducto" modal="true" resizable="false" draggable="false"
+        <p:dialog id="dlgProd" widgetVar="dlgProducto" modal="true" resizable="false" draggable="false"
                   header="#{productoUI.producto.id == null ? 'Registrar producto' : 'Modificar producto'}"
                   width="520" closeOnEscape="true">
             <h:form id="formDialogo">
