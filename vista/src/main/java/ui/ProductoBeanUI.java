@@ -12,19 +12,17 @@ import puesto.maria.entity.Producto;
 import puesto.maria.entity.Proveedor;
 
 import java.io.Serializable;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Pantalla de productos (PBI-PRO): registrar (US1), modificar y deshabilitar (US4),
- * y buscar por código o nombre. La pantalla de productos solo busca entre productos activos
- * cuando se usa la barra de búsqueda; el listado completo muestra también los deshabilitados.
+ * y buscar por código o nombre. El listado incluye los productos deshabilitados (en gris).
  */
 @Named("productoUI")
 @SessionScoped
 public class ProductoBeanUI implements Serializable {
-
-    private static final int MAX_SUGERENCIAS = 20;
 
     private final ProductoHelper helper = new ProductoHelper();
 
@@ -48,16 +46,32 @@ public class ProductoBeanUI implements Serializable {
         cargar();
     }
 
-    /** Recarga el listado según el texto de búsqueda. */
+    /**
+     * Recarga el listado. Muestra los productos (los deshabilitados solo si la casilla está marcada) y, si hay texto
+     * en la barra de búsqueda, filtra por código o nombre sin distinguir mayúsculas ni acentos.
+     */
     public void cargar() {
-        if (textoBusqueda == null || textoBusqueda.isBlank()) {
-            productos = new ArrayList<>(helper.listar());
-        } else {
-            productos = new ArrayList<>(helper.buscar(textoBusqueda, true, MAX_SUGERENCIAS));
+        List<Producto> todos = helper.listar();
+        String t = textoBusqueda == null ? "" : normalizar(textoBusqueda);
+        List<Producto> filtrados = new ArrayList<>();
+        for (Producto p : todos) {
+            if (!verDeshabilitados && !Boolean.TRUE.equals(p.getActivo())) {
+                continue;
+            }
+            if (t.isEmpty() || normalizar(p.getNombre()).contains(t) || normalizar(p.getCodigoCorto()).contains(t)) {
+                filtrados.add(p);
+            }
         }
-        if (!verDeshabilitados) {
-            productos.removeIf(p -> !Boolean.TRUE.equals(p.getActivo()));
+        productos = filtrados;
+    }
+
+    private static String normalizar(String texto) {
+        if (texto == null) {
+            return "";
         }
+        return Normalizer.normalize(texto.toLowerCase(), Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .trim();
     }
 
     public void buscar() {
@@ -160,6 +174,14 @@ public class ProductoBeanUI implements Serializable {
         this.proveedorId = proveedorId;
     }
 
+    public boolean isVerDeshabilitados() {
+        return verDeshabilitados;
+    }
+
+    public void setVerDeshabilitados(boolean verDeshabilitados) {
+        this.verDeshabilitados = verDeshabilitados;
+    }
+
     public String getTextoBusqueda() {
         return textoBusqueda;
     }
@@ -168,11 +190,4 @@ public class ProductoBeanUI implements Serializable {
         this.textoBusqueda = textoBusqueda;
     }
 
-    public boolean isVerDeshabilitados() {
-        return verDeshabilitados;
-    }
-
-    public void setVerDeshabilitados(boolean verDeshabilitados) {
-        this.verDeshabilitados = verDeshabilitados;
-    }
 }
