@@ -3,7 +3,7 @@ package puesto.maria.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
-import java.time.LocalDate;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "lote")
@@ -31,8 +31,9 @@ public class Lote {
     @Column(name = "cantidad_disponible", nullable = false)
     private Integer cantidadDisponible;
 
-    @Column(name = "fecha_caducidad")
-    private LocalDate fechaCaducidad;
+    @NotNull
+    @Column(name = "costo_unitario", nullable = false, precision = 12, scale = 2)
+    private BigDecimal costoUnitario;
 
     public Integer getId() {
         return id;
@@ -74,12 +75,12 @@ public class Lote {
         this.cantidadDisponible = cantidadDisponible;
     }
 
-    public LocalDate getFechaCaducidad() {
-        return fechaCaducidad;
+    public BigDecimal getCostoUnitario() {
+        return costoUnitario;
     }
 
-    public void setFechaCaducidad(LocalDate fechaCaducidad) {
-        this.fechaCaducidad = fechaCaducidad;
+    public void setCostoUnitario(BigDecimal costoUnitario) {
+        this.costoUnitario = costoUnitario;
     }
 
 }

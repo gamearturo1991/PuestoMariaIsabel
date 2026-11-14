@@ -18,6 +18,9 @@ public class ServiceLocator {
 
 
     private static UsuarioDAO usuarioDAO;
+    private static CategoriaDAO categoriaDAO;
+    private static ProveedorDAO proveedorDAO;
+    private static ProductoDAO productoDAO;
 
     private static EntityManager getEntityManager(){
         return HibernateUtil.getEntityManager();
@@ -34,5 +37,35 @@ public class ServiceLocator {
             return usuarioDAO;
         }
     }
-    
+
+    /**
+     * se crea la instancia de categoriaDAO si esta no existe
+     */
+    public static CategoriaDAO getInstanceCategoriaDAO(){
+        if(categoriaDAO == null){
+            categoriaDAO = new CategoriaDAO(getEntityManager());
+        }
+        return categoriaDAO;
+    }
+
+    /**
+     * se crea la instancia de proveedorDAO si esta no existe
+     */
+    public static ProveedorDAO getInstanceProveedorDAO(){
+        if(proveedorDAO == null){
+            proveedorDAO = new ProveedorDAO(getEntityManager());
+        }
+        return proveedorDAO;
+    }
+
+    /**
+     * se crea la instancia de productoDAO si esta no existe
+     */
+    public static ProductoDAO getInstanceProductoDAO(){
+        if(productoDAO == null){
+            productoDAO = new ProductoDAO(getEntityManager());
+        }
+        return productoDAO;
+    }
+
 }
