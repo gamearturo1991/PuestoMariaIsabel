@@ -1,0 +1,168 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html>
+<ui:composition template="/WEB-INF/templates/layout.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui">
+
+    <ui:define name="titulo">Productos</ui:define>
+
+    <ui:define name="head">
+        <h:outputStylesheet name="productos.css" />
+    </ui:define>
+
+    <ui:define name="contenido">
+
+        <p:growl id="growl" showDetail="true" life="4000" />
+
+        <!-- ===== Listado ===== -->
+        <h:form id="formTabla">
+            <div class="productos-barra">
+                <span class="ui-input-icon-left buscador">
+                    <i class="pi pi-search" />
+                    <p:inputText id="buscar" value="#{productoUI.textoBusqueda}"
+                                 placeholder="Buscar por código o nombre" autocomplete="off">
+                        <p:ajax event="keyup" delay="300" listener="#{productoUI.buscar}" update="tabla" />
+                    </p:inputText>
+                </span>
+
+                <p:selectBooleanCheckbox id="verDes" value="#{productoUI.verDeshabilitados}"
+                                         itemLabel="Mostrar deshabilitados">
+                    <p:ajax listener="#{productoUI.cargar}" update="tabla" />
+                </p:selectBooleanCheckbox>
+
+                <span class="espacio" />
+
+                <p:commandButton value="Nuevo producto" icon="pi pi-plus"
+                                 actionListener="#{productoUI.nuevo}"
+                                 process="@this" update=":formDialogo"
+                                 oncomplete="PF('dlgProducto').show()" />
+            </div>
+
+            <p:dataTable id="tabla" value="#{productoUI.productos}" var="pr"
+                         rowKey="#{pr.id}" paginator="true" rows="15"
+                         paginatorPosition="bottom"
+                         rowStyleClass="#{pr.activo ? '' : 'fila-deshabilitada'}"
+                         emptyMessage="No hay productos que mostrar">
+
+                <p:column headerText="Código" width="140">
+                    <h:outputText value="#{pr.codigoCorto}" styleClass="codigo" />
+                </p:column>
+                <p:column headerText="Nombre">
+                    <h:outputText value="#{pr.nombre}" />
+                </p:column>
+                <p:column headerText="Categoría" width="110">
+                    <h:outputText value="#{pr.idCategoria.nombre}" />
+                </p:column>
+                <p:column headerText="Proveedor" width="130">
+                    <h:outputText value="#{pr.idProveedor.nombre}" />
+                </p:column>
+                <p:column headerText="Costo" width="90" styleClass="num">
+                    <h:outputText value="#{pr.costo}">
+                        <f:convertNumber pattern="$#,##0.00" />
+                    </h:outputText>
+                </p:column>
+                <p:column headerText="Precio" width="90" styleClass="num">
+                    <h:outputText value="#{pr.precioVenta}">
+                        <f:convertNumber pattern="$#,##0.00" />
+                    </h:outputText>
+                </p:column>
+                <p:column headerText="Mín." width="60" styleClass="num">
+                    <h:outputText value="#{pr.stockMinimo}" />
+                </p:column>
+                <p:column headerText="Máx." width="60" styleClass="num">
+                    <h:outputText value="#{pr.stockMaximo}" />
+                </p:column>
+                <p:column headerText="Estado" width="120">
+                    <h:outputText value="#{pr.activo ? 'Activo' : 'Deshabilitado'}"
+                                  styleClass="estado #{pr.activo ? 'estado-activo' : 'estado-baja'}" />
+                </p:column>
+                <p:column headerText="Acciones" width="150">
+                    <p:commandButton icon="pi pi-pencil" title="Modificar"
+                                     styleClass="rounded-button ui-button-flat"
+                                     actionListener="#{productoUI.editar(pr)}"
+                                     process="@this" update=":formDialogo"
+                                     oncomplete="PF('dlgProducto').show()" />
+                    <p:commandButton icon="pi pi-ban" title="Deshabilitar"
+                                     styleClass="rounded-button ui-button-flat ui-button-danger"
+                                     rendered="#{pr.activo}"
+                                     actionListener="#{productoUI.deshabilitar(pr)}"
+                                     process="@this" update="tabla :growl">
+                        <p:confirm header="Deshabilitar producto"
+                                   message="¿Deshabilitar #{pr.nombre}? Dejará de aparecer en las búsquedas; se reactiva desde Entradas de mercancía."
+                                   icon="pi pi-exclamation-triangle" />
+                    </p:commandButton>
+                </p:column>
+            </p:dataTable>
+
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                <p:commandButton value="Sí, deshabilitar" type="button" styleClass="ui-confirmdialog-yes" />
+                <p:commandButton value="Cancelar" type="button" styleClass="ui-confirmdialog-no ui-button-flat" />
+            </p:confirmDialog>
+        </h:form>
+
+        <!-- ===== Formulario: registrar / modificar ===== -->
+        <p:dialog widgetVar="dlgProducto" modal="true" resizable="false" draggable="false"
+                  header="#{productoUI.producto.id == null ? 'Registrar producto' : 'Modificar producto'}"
+                  width="520" closeOnEscape="true">
+            <h:form id="formDialogo">
+                <div class="form-grid">
+
+                    <p:outputLabel for="codigo" value="Código corto" />
+                    <p:inputText id="codigo" value="#{productoUI.producto.codigoCorto}" maxlength="50"
+                                 placeholder="ej. fantfre600 (sin espacios)" />
+
+                    <p:outputLabel for="nombre" value="Nombre" />
+                    <p:inputText id="nombre" value="#{productoUI.producto.nombre}" maxlength="255" />
+
+                    <p:outputLabel for="categoria" value="Categoría" />
+                    <p:selectOneMenu id="categoria" value="#{productoUI.categoriaId}">
+                        <f:selectItem itemLabel="Selecciona…" itemValue="#{null}" noSelectionOption="true" />
+                        <f:selectItems value="#{productoUI.categorias}" var="c"
+                                       itemLabel="#{c.nombre}" itemValue="#{c.id}" />
+                    </p:selectOneMenu>
+
+                    <p:outputLabel for="proveedor" value="Proveedor" />
+                    <p:selectOneMenu id="proveedor" value="#{productoUI.proveedorId}">
+                        <f:selectItem itemLabel="Selecciona…" itemValue="#{null}" noSelectionOption="true" />
+                        <f:selectItems value="#{productoUI.proveedores}" var="v"
+                                       itemLabel="#{v.nombre}" itemValue="#{v.id}" />
+                    </p:selectOneMenu>
+
+                    <p:outputLabel for="costo" value="Costo" />
+                    <p:inputNumber id="costo" value="#{productoUI.producto.costo}"
+                                   symbol="$ " decimalPlaces="2" minValue="0" />
+
+                    <p:outputLabel for="precio" value="Precio de venta" />
+                    <p:inputNumber id="precio" value="#{productoUI.producto.precioVenta}"
+                                   symbol="$ " decimalPlaces="2" minValue="0" />
+
+                    <p:outputLabel for="minimo" value="Stock mínimo" />
+                    <p:inputNumber id="minimo" value="#{productoUI.producto.stockMinimo}"
+                                   decimalPlaces="0" minValue="0" />
+
+                    <p:outputLabel for="maximo" value="Stock máximo" />
+                    <p:inputNumber id="maximo" value="#{productoUI.producto.stockMaximo}"
+                                   decimalPlaces="0" minValue="0" />
+                </div>
+
+                <div class="nota">
+                    El stock máximo es solo una referencia: el sistema permite registrar más mercancía y solo avisa.
+                </div>
+
+                <div class="dialogo-botones">
+                    <p:commandButton value="Cancelar" type="button" styleClass="ui-button-flat"
+                                     onclick="PF('dlgProducto').hide()" />
+                    <p:commandButton value="Guardar" icon="pi pi-check"
+                                     actionListener="#{productoUI.guardar}"
+                                     update="formDialogo :formTabla:tabla :growl"
+                                     oncomplete="if (args &amp;&amp; args.guardado) PF('dlgProducto').hide()" />
+                </div>
+            </h:form>
+        </p:dialog>
+
+    </ui:define>
+
+</ui:composition>

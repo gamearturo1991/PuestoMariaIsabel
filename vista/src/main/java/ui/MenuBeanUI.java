@@ -34,7 +34,7 @@ public class MenuBeanUI implements Serializable {
         items = new ArrayList<>();
         // Cuando una pantalla exista, cambia su "disponible" a true y pon su url.
         items.add(new ItemMenu("Ventas", "/index.xhtml", true));
-        items.add(new ItemMenu("Productos", "/productos.xhtml", false));
+        items.add(new ItemMenu("Productos", "/productos.xhtml", true));
         items.add(new ItemMenu("Inventario y alertas", "/inventario.xhtml", false));
         items.add(new ItemMenu("Entradas de mercancía", "/entradas.xhtml", false));
         items.add(new ItemMenu("Mermas y devoluciones", "/mermas.xhtml", false));

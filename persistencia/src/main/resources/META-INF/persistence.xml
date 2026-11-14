@@ -9,6 +9,9 @@
 
     <!-- Declaración manual de entidades -->
     <class>puesto.maria.entity.Usuario</class>
+    <class>puesto.maria.entity.Categoria</class>
+    <class>puesto.maria.entity.Proveedor</class>
+    <class>puesto.maria.entity.Producto</class>
 
 
     <properties>
