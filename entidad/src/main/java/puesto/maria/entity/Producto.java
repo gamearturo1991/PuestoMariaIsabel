@@ -1,6 +1,7 @@
 package puesto.maria.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.hibernate.annotations.ColumnDefault;
@@ -43,17 +44,15 @@ public class Producto {
     @Column(name = "precio_venta", nullable = false, precision = 12, scale = 2)
     private BigDecimal precioVenta;
 
-    @ColumnDefault("0")
-    @Column(name = "stock_minimo")
+    @NotNull
+    @Min(0)
+    @Column(name = "stock_minimo", nullable = false)
     private Integer stockMinimo;
 
-    @ColumnDefault("0")
-    @Column(name = "stock_maximo")
+    @NotNull
+    @Min(2)
+    @Column(name = "stock_maximo", nullable = false)
     private Integer stockMaximo;
-
-    @ColumnDefault("0")
-    @Column(name = "dias_alerta_caducidad")
-    private Integer diasAlertaCaducidad;
 
     @ColumnDefault("1")
     @Column(name = "activo")
@@ -129,14 +128,6 @@ public class Producto {
 
     public void setStockMaximo(Integer stockMaximo) {
         this.stockMaximo = stockMaximo;
-    }
-
-    public Integer getDiasAlertaCaducidad() {
-        return diasAlertaCaducidad;
-    }
-
-    public void setDiasAlertaCaducidad(Integer diasAlertaCaducidad) {
-        this.diasAlertaCaducidad = diasAlertaCaducidad;
     }
 
     public Boolean getActivo() {
