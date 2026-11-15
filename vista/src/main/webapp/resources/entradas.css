@@ -1,0 +1,100 @@
+/* Pantalla de entradas de mercancía */
+
+.panel-entrada {
+    max-width: 980px;
+}
+
+.panel-entrada .form-grid {
+    margin-bottom: 14px;
+}
+
+.panel-entrada .ui-autocomplete,
+.panel-entrada .ui-autocomplete-input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.info-producto {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 22px;
+    margin: 0 0 14px 0;
+    padding: 10px 14px;
+    background: var(--fondo-suave);
+    border-radius: 10px;
+    font-size: 13px;
+    color: var(--primario-oscuro);
+}
+
+.aviso {
+    margin: 0 0 14px 0;
+    padding: 9px 14px;
+    background: #FEF3C7;
+    color: #7A4A00;
+    border-radius: 10px;
+    font-size: 13px;
+}
+
+.hint-precio {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--texto-sec);
+}
+
+.selector-modo {
+    margin-bottom: 16px;
+}
+
+.barra-recepcion {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin: 6px 0 10px 0;
+}
+
+.buscador-recepcion {
+    width: 320px;
+}
+
+.buscador-recepcion input {
+    width: 100%;
+}
+
+.resumen-recepcion {
+    color: var(--primario-oscuro);
+    font-size: 14px;
+}
+
+.tabla-recepcion thead th,
+.tabla-recepcion tbody td {
+    padding: 6px 8px;
+    font-size: 13px;
+}
+
+.tabla-recepcion .campo-tabla {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.tabla-recepcion .ui-inputnumber {
+    width: 100%;
+}
+
+.tabla-recepcion tr.fila-seleccionada td {
+    background: #E6F4F1;
+}
+
+.etiqueta-baja {
+    color: #7A4A00;
+    font-size: 12px;
+}
+
+.existencia-baja {
+    color: #B42318;
+    font-weight: 700;
+}
+
+.obs {
+    margin-top: 14px;
+}

@@ -1,0 +1,224 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html>
+<ui:composition template="/WEB-INF/templates/layout.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui">
+
+    <ui:define name="titulo">Entradas de mercancía</ui:define>
+
+    <ui:define name="head">
+        <h:outputStylesheet name="productos.css" />
+        <h:outputStylesheet name="entradas.css" />
+    </ui:define>
+
+    <ui:define name="contenido">
+
+        <p:growl id="growl" showDetail="true" life="7000" />
+
+        <h:form id="formEntrada">
+            <p:panel header="Registrar entrada de mercancía" styleClass="panel-entrada">
+
+                <!-- ===== ¿Qué se va a registrar? ===== -->
+                <div class="selector-modo">
+                    <p:selectOneButton id="modo" value="#{entradaUI.modo}">
+                        <f:selectItem itemLabel="Un producto" itemValue="PRODUCTO" />
+                        <f:selectItem itemLabel="Recibir un proveedor" itemValue="PROVEEDOR" />
+                        <p:ajax listener="#{entradaUI.cambiarModo}" update="formEntrada" />
+                    </p:selectOneButton>
+                </div>
+
+                <!-- ===== Modo: un solo producto ===== -->
+                <h:panelGroup id="panelUno" layout="block" rendered="#{!entradaUI.modoProveedor}">
+
+                    <div class="form-grid">
+
+                        <p:outputLabel for="proveedor" value="Proveedor" />
+                        <p:selectOneMenu id="proveedor" value="#{entradaUI.proveedorId}">
+                            <f:selectItem itemLabel="Selecciona…" itemValue="#{null}" noSelectionOption="true" />
+                            <f:selectItems value="#{entradaUI.proveedores}" var="v"
+                                           itemLabel="#{v.nombre}" itemValue="#{v.id}" />
+                        </p:selectOneMenu>
+
+                        <p:outputLabel for="producto" value="Producto" />
+                        <p:autoComplete id="producto" value="#{entradaUI.productoSeleccionado}"
+                                        completeMethod="#{entradaUI.completarProducto}"
+                                        var="pr" itemLabel="#{pr.codigoCorto} · #{pr.nombre}#{pr.activo ? '' : ' (deshabilitado)'}"
+                                        itemValue="#{pr}" forceSelection="true"
+                                        minQueryLength="1" maxResults="20" scrollHeight="220" queryDelay="200"
+                                        placeholder="Código o nombre del producto" emptyMessage="Sin resultados">
+                            <p:ajax event="itemSelect" listener="#{entradaUI.onProductoSeleccionado}"
+                                    update="datosProducto cantidad costo precio hintPrecio proveedor" />
+                            <p:ajax event="clear" listener="#{entradaUI.onProductoSeleccionado}"
+                                    update="datosProducto cantidad costo precio hintPrecio" />
+                        </p:autoComplete>
+                    </div>
+
+                    <h:panelGroup id="datosProducto" layout="block">
+                        <h:panelGroup layout="block" styleClass="info-producto"
+                                      rendered="#{entradaUI.productoSeleccionado != null}">
+                            <span>Existencia actual: <b>#{entradaUI.existenciaActual}</b></span>
+                            <span>Mínimo: <b>#{entradaUI.productoSeleccionado.stockMinimo}</b></span>
+                            <span>Máximo: <b>#{entradaUI.productoSeleccionado.stockMaximo}</b></span>
+                            <span>Costo actual:
+                                <b><h:outputText value="#{entradaUI.productoSeleccionado.costo}">
+                                    <f:convertNumber pattern="$#,##0.00" />
+                                </h:outputText></b></span>
+                            <span>Precio actual:
+                                <b><h:outputText value="#{entradaUI.productoSeleccionado.precioVenta}">
+                                    <f:convertNumber pattern="$#,##0.00" />
+                                </h:outputText></b></span>
+                        </h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="aviso"
+                                      rendered="#{entradaUI.productoDeshabilitado}">
+                            Este producto está deshabilitado. Al guardar la entrada se reactivará.
+                        </h:panelGroup>
+                    </h:panelGroup>
+
+                    <div class="form-grid">
+
+                        <p:outputLabel for="cantidad" value="Cantidad (piezas)" />
+                        <p:inputNumber id="cantidad" value="#{entradaUI.cantidad}"
+                                       decimalPlaces="0" minValue="0" />
+
+                        <p:outputLabel for="costo" value="Costo de compra (por pieza)" />
+                        <p:inputNumber id="costo" value="#{entradaUI.costo}"
+                                       symbol="$ " decimalPlaces="2" minValue="0">
+                            <p:ajax event="change" listener="#{entradaUI.onCostoCambiado}"
+                                    update="precio hintPrecio" />
+                        </p:inputNumber>
+
+                        <p:outputLabel for="precio" value="Precio de venta" />
+                        <h:panelGroup>
+                            <p:inputNumber id="precio" value="#{entradaUI.precioVenta}"
+                                           symbol="$ " decimalPlaces="2" minValue="0" />
+                            <h:panelGroup id="hintPrecio" styleClass="hint-precio">
+                                <h:outputText rendered="#{entradaUI.precioSugerido != null}"
+                                              value="Precio sugerido: " />
+                                <h:outputText rendered="#{entradaUI.precioSugerido != null}"
+                                              value="#{entradaUI.precioSugerido}">
+                                    <f:convertNumber pattern="$#,##0.00" />
+                                </h:outputText>
+                                <h:outputText rendered="#{entradaUI.precioSugerido != null}"
+                                              value=" (mantiene la proporción actual; puedes cambiarlo)" />
+                            </h:panelGroup>
+                        </h:panelGroup>
+                    </div>
+                </h:panelGroup>
+
+                <!-- ===== Modo: recibir un proveedor ===== -->
+                <h:panelGroup id="panelProveedor" layout="block" rendered="#{entradaUI.modoProveedor}">
+
+                    <div class="form-grid">
+                        <p:outputLabel for="proveedorRec" value="Proveedor" />
+                        <p:selectOneMenu id="proveedorRec" value="#{entradaUI.proveedorId}">
+                            <f:selectItem itemLabel="Selecciona…" itemValue="#{null}" noSelectionOption="true" />
+                            <f:selectItems value="#{entradaUI.proveedores}" var="v"
+                                           itemLabel="#{v.nombre}" itemValue="#{v.id}" />
+                            <p:ajax listener="#{entradaUI.cargarProductosProveedor}" update="zonaRecepcion" />
+                        </p:selectOneMenu>
+                    </div>
+
+                    <h:panelGroup id="zonaRecepcion" layout="block">
+                        <h:panelGroup layout="block" rendered="#{entradaUI.proveedorId != null}">
+
+                            <div class="barra-recepcion">
+                                <span class="ui-input-icon-left buscador-recepcion">
+                                    <i class="pi pi-search" />
+                                    <p:inputText id="filtro" value="#{entradaUI.filtroLineas}"
+                                                 placeholder="Filtrar productos del proveedor" autocomplete="off">
+                                        <p:ajax event="keyup" delay="300" listener="#{entradaUI.filtrar}"
+                                                update="tablaRecepcion" />
+                                    </p:inputText>
+                                </span>
+                                <h:panelGroup id="resumen" styleClass="resumen-recepcion">
+                                    A recibir: <b>#{entradaUI.productosSeleccionados}</b> producto(s),
+                                    <b>#{entradaUI.piezasSeleccionadas}</b> pieza(s)
+                                </h:panelGroup>
+                            </div>
+
+                            <p:dataTable id="tablaRecepcion" value="#{entradaUI.lineasVisibles}" var="l"
+                                         rowKey="#{l.producto.id}"
+                                         scrollable="true" scrollHeight="420"
+                                         styleClass="tabla-recepcion"
+                                         tableStyle="table-layout:auto;width:100%"
+                                         rowStyleClass="#{l.seleccionada ? 'fila-seleccionada' : (l.producto.activo ? '' : 'fila-deshabilitada')}"
+                                         emptyMessage="Este proveedor no tiene productos que mostrar">
+
+                                <p:column headerText="Producto">
+                                    <h:outputText value="#{l.producto.nombre}" />
+                                    <h:outputText value=" (deshabilitado)" styleClass="etiqueta-baja"
+                                                  rendered="#{!l.producto.activo}" />
+                                    <br />
+                                    <h:outputText value="#{l.producto.codigoCorto}" styleClass="codigo" />
+                                </p:column>
+                                <p:column headerText="Existencia" styleClass="num" width="80">
+                                    <h:outputText value="#{l.existencia}"
+                                                  styleClass="#{l.bajoMinimo ? 'existencia-baja' : 'existencia'}" />
+                                </p:column>
+                                <p:column headerText="Mín. / Máx." styleClass="num" width="80">
+                                    <h:outputText value="#{l.producto.stockMinimo} / #{l.producto.stockMaximo}" />
+                                </p:column>
+                                <p:column headerText="Cantidad a recibir" width="120">
+                                    <p:inputNumber value="#{l.cantidad}" decimalPlaces="0" minValue="0"
+                                                   inputStyleClass="campo-tabla">
+                                        <p:ajax event="change" update=":formEntrada:resumen" process="@this" />
+                                    </p:inputNumber>
+                                </p:column>
+                                <p:column headerText="Costo" width="110">
+                                    <p:inputNumber id="costoLinea" value="#{l.costo}" symbol="$ " decimalPlaces="2"
+                                                   minValue="0" inputStyleClass="campo-tabla">
+                                        <p:ajax event="change" listener="#{entradaUI.onCostoLinea(l)}"
+                                                process="@this" update="precioLinea hintLinea" />
+                                    </p:inputNumber>
+                                </p:column>
+                                <p:column headerText="Precio de venta" width="130">
+                                    <p:inputNumber id="precioLinea" value="#{l.precioVenta}" symbol="$ "
+                                                   decimalPlaces="2" minValue="0" inputStyleClass="campo-tabla" />
+                                    <h:panelGroup id="hintLinea" styleClass="hint-precio">
+                                        <h:outputText rendered="#{l.precioSugerido != null}" value="Sugerido: ">
+                                        </h:outputText>
+                                        <h:outputText rendered="#{l.precioSugerido != null}"
+                                                      value="#{l.precioSugerido}">
+                                            <f:convertNumber pattern="$#,##0.00" />
+                                        </h:outputText>
+                                    </h:panelGroup>
+                                </p:column>
+                            </p:dataTable>
+
+                            <div class="nota">
+                                Solo se registran los productos a los que les captures una cantidad. Al cambiar un costo se
+                                propone el precio de venta (puedes editarlo).
+                            </div>
+                        </h:panelGroup>
+                    </h:panelGroup>
+                </h:panelGroup>
+
+                <div class="form-grid obs">
+                    <p:outputLabel for="observaciones" value="Observaciones" />
+                    <p:inputTextarea id="observaciones" value="#{entradaUI.observaciones}"
+                                     rows="2" autoResize="false" />
+                </div>
+
+                <div class="nota">
+                    El stock máximo es solo una referencia: si la existencia lo supera, la entrada se registra y solo se avisa.
+                </div>
+
+                <div class="dialogo-botones">
+                    <p:commandButton value="Limpiar" styleClass="ui-button-flat"
+                                     actionListener="#{entradaUI.limpiar}"
+                                     process="@this" update="formEntrada" />
+                    <p:commandButton value="#{entradaUI.modoProveedor ? 'Registrar recepción' : 'Registrar entrada'}"
+                                     icon="pi pi-check"
+                                     actionListener="#{entradaUI.guardar}"
+                                     process="@form" update="formEntrada :growl" />
+                </div>
+
+            </p:panel>
+        </h:form>
+
+    </ui:define>
+
+</ui:composition>

@@ -36,7 +36,7 @@ public class MenuBeanUI implements Serializable {
         items.add(new ItemMenu("Ventas", "/index.xhtml", true));
         items.add(new ItemMenu("Productos", "/productos.xhtml", true));
         items.add(new ItemMenu("Inventario y alertas", "/inventario.xhtml", false));
-        items.add(new ItemMenu("Entradas de mercancía", "/entradas.xhtml", false));
+        items.add(new ItemMenu("Entradas de mercancía", "/entradas.xhtml", true));
         items.add(new ItemMenu("Mermas y devoluciones", "/mermas.xhtml", false));
         items.add(new ItemMenu("Clientes y facturación", "/clientes.xhtml", false));
         items.add(new ItemMenu("Proveedores", "/proveedores.xhtml", false));

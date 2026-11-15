@@ -8,7 +8,10 @@ import puesto.maria.persistence.integration.ServiceLocator;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.Normalizer;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Reglas de negocio de productos (PBI-PRO).
@@ -42,16 +45,58 @@ public class DelegateProducto {
     }
 
     /** Todos los productos (pantalla de administración de productos). */
+    /** Existencia de cada producto (id -> piezas); los productos sin lotes no aparecen y valen 0. */
+    public Map<Integer, Long> existencias() {
+        return dao().existenciasPorProducto();
+    }
+
     public List<Producto> listarProductos() {
         return dao().listarTodos();
     }
 
     /**
-     * Búsqueda por código exacto o nombre.
+     * Búsqueda por código exacto o nombre (sin distinguir mayúsculas ni acentos).
+     * El código exacto va primero; después los que contienen el texto en nombre o código.
      * @param soloActivos true en ventas y productos; false en entradas (permite reactivar).
      */
     public List<Producto> buscarProductos(String texto, boolean soloActivos, int max) {
-        return dao().buscar(texto, soloActivos, max);
+        List<Producto> resultado = new ArrayList<>();
+        if (texto == null || texto.isBlank()) {
+            return resultado;
+        }
+        String t = normalizar(texto);
+        List<Producto> coincidencias = new ArrayList<>();
+        for (Producto p : dao().listarTodos()) {
+            if (soloActivos && !Boolean.TRUE.equals(p.getActivo())) {
+                continue;
+            }
+            String codigo = normalizar(p.getCodigoCorto());
+            if (codigo.equals(t)) {
+                resultado.add(p);
+            } else if (codigo.contains(t) || normalizar(p.getNombre()).contains(t)) {
+                coincidencias.add(p);
+            }
+        }
+        resultado.addAll(coincidencias);
+        return resultado.size() > max ? new ArrayList<>(resultado.subList(0, max)) : resultado;
+    }
+
+    /** Productos (activos y deshabilitados) que surte un proveedor, ordenados por nombre. */
+    public List<Producto> productosDeProveedor(Integer idProveedor) {
+        List<Producto> lista = new ArrayList<>();
+        if (idProveedor == null) {
+            return lista;
+        }
+        for (Producto p : dao().listarTodos()) {
+            if (p.getIdProveedor() != null && idProveedor.equals(p.getIdProveedor().getId())) {
+                lista.add(p);
+            }
+        }
+        return lista;
+    }
+
+    public Producto obtenerProducto(Integer id) {
+        return id == null ? null : dao().find(id).orElse(null);
     }
 
     public List<Categoria> listarCategorias() {
@@ -85,6 +130,15 @@ public class DelegateProducto {
     }
 
     /* ======================== helpers internos ======================== */
+
+    private static String normalizar(String texto) {
+        if (texto == null) {
+            return "";
+        }
+        return Normalizer.normalize(texto.toLowerCase(), Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .trim();
+    }
 
     private void normalizar(Producto p) {
         if (p.getNombre() != null) {

@@ -45,42 +45,48 @@
             <p:dataTable id="tabla" value="#{productoUI.productos}" var="pr"
                          rowKey="#{pr.id}" paginator="true" rows="15"
                          paginatorPosition="bottom"
+                         tableStyle="table-layout:auto;width:100%"
+                         styleClass="tabla-productos"
                          rowStyleClass="#{pr.activo ? '' : 'fila-deshabilitada'}"
                          emptyMessage="No hay productos que mostrar">
 
-                <p:column headerText="Código" width="140">
+                <p:column headerText="Código">
                     <h:outputText value="#{pr.codigoCorto}" styleClass="codigo" />
                 </p:column>
                 <p:column headerText="Nombre">
                     <h:outputText value="#{pr.nombre}" />
                 </p:column>
-                <p:column headerText="Categoría" width="110">
+                <p:column headerText="Categoría">
                     <h:outputText value="#{pr.idCategoria.nombre}" />
                 </p:column>
-                <p:column headerText="Proveedor" width="130">
+                <p:column headerText="Proveedor">
                     <h:outputText value="#{pr.idProveedor.nombre}" />
                 </p:column>
-                <p:column headerText="Costo" width="90" styleClass="num">
+                <p:column headerText="Costo" styleClass="num">
                     <h:outputText value="#{pr.costo}">
                         <f:convertNumber pattern="$#,##0.00" />
                     </h:outputText>
                 </p:column>
-                <p:column headerText="Precio" width="90" styleClass="num">
+                <p:column headerText="Precio" styleClass="num">
                     <h:outputText value="#{pr.precioVenta}">
                         <f:convertNumber pattern="$#,##0.00" />
                     </h:outputText>
                 </p:column>
-                <p:column headerText="Mín." width="60" styleClass="num">
+                <p:column headerText="Existencia" styleClass="num">
+                    <h:outputText value="#{productoUI.existenciaDe(pr)}"
+                                  styleClass="#{productoUI.existenciaBaja(pr) ? 'existencia-baja' : 'existencia'}" />
+                </p:column>
+                <p:column headerText="Mín." styleClass="num">
                     <h:outputText value="#{pr.stockMinimo}" />
                 </p:column>
-                <p:column headerText="Máx." width="60" styleClass="num">
+                <p:column headerText="Máx." styleClass="num">
                     <h:outputText value="#{pr.stockMaximo}" />
                 </p:column>
-                <p:column headerText="Estado" width="120">
+                <p:column headerText="Estado">
                     <h:outputText value="#{pr.activo ? 'Activo' : 'Deshabilitado'}"
                                   styleClass="estado #{pr.activo ? 'estado-activo' : 'estado-baja'}" />
                 </p:column>
-                <p:column headerText="Acciones" width="150">
+                <p:column headerText="Acciones" styleClass="col-acciones">
                     <p:commandButton icon="pi pi-pencil" title="Modificar"
                                      styleClass="rounded-button ui-button-flat"
                                      actionListener="#{productoUI.editar(pr)}"

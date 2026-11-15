@@ -19,6 +19,41 @@
     width: 100%;
 }
 
+/* Tabla compacta: todas las columnas caben sin scroll horizontal */
+.tabla-productos .ui-datatable-tablewrapper {
+    overflow-x: hidden;
+}
+
+.tabla-productos thead th,
+.tabla-productos tbody td {
+    padding: 6px 8px;
+    font-size: 13px;
+}
+
+.tabla-productos tbody td {
+    height: auto;
+}
+
+.tabla-productos .col-acciones {
+    white-space: nowrap;
+    width: 96px;
+}
+
+.tabla-productos .col-acciones .ui-button {
+    width: 2rem;
+    height: 2rem;
+    margin-right: 2px;
+}
+
+.existencia {
+    font-weight: 600;
+}
+
+.existencia-baja {
+    font-weight: 700;
+    color: #B42318;
+}
+
 .ui-datatable .codigo {
     font-family: Consolas, 'Courier New', monospace;
     font-size: 13px;

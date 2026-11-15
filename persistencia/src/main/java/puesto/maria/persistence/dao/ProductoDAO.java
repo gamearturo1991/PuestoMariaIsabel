@@ -6,7 +6,9 @@ import puesto.maria.entity.Producto;
 import puesto.maria.persistence.persistence.AbstractDAO;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ProductoDAO extends AbstractDAO<Producto> {
     private final EntityManager entityManager;
@@ -21,6 +23,20 @@ public class ProductoDAO extends AbstractDAO<Producto> {
         return execute(em -> em
                 .createQuery("SELECT p FROM Producto p ORDER BY p.nombre", Producto.class)
                 .getResultList());
+    }
+
+    /** Existencia de todos los productos en una sola consulta: id de producto -> suma de cantidad disponible de sus lotes. */
+    public Map<Integer, Long> existenciasPorProducto() {
+        return execute(em -> {
+            Map<Integer, Long> mapa = new HashMap<>();
+            List<Object[]> filas = em.createQuery(
+                    "SELECT l.idProducto.id, SUM(l.cantidadDisponible) FROM Lote l GROUP BY l.idProducto.id",
+                    Object[].class).getResultList();
+            for (Object[] f : filas) {
+                mapa.put((Integer) f[0], ((Number) f[1]).longValue());
+            }
+            return mapa;
+        });
     }
 
     /** Busca un producto por su código corto exacto (sin distinguir mayúsculas). */

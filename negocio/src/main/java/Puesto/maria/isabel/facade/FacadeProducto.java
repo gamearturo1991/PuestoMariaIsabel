@@ -7,6 +7,7 @@ import puesto.maria.entity.Proveedor;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 public class FacadeProducto {
 
@@ -28,12 +29,24 @@ public class FacadeProducto {
         delegateProducto.deshabilitarProducto(producto);
     }
 
+    public Map<Integer, Long> existencias() {
+        return delegateProducto.existencias();
+    }
+
     public List<Producto> listarProductos() {
         return delegateProducto.listarProductos();
     }
 
     public List<Producto> buscarProductos(String texto, boolean soloActivos, int max) {
         return delegateProducto.buscarProductos(texto, soloActivos, max);
+    }
+
+    public List<Producto> productosDeProveedor(Integer idProveedor) {
+        return delegateProducto.productosDeProveedor(idProveedor);
+    }
+
+    public Producto obtenerProducto(Integer id) {
+        return delegateProducto.obtenerProducto(id);
     }
 
     public List<Categoria> listarCategorias() {
