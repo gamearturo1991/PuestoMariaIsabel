@@ -12,6 +12,10 @@ public class InventarioHelper implements Serializable {
         return ServiceFacadeLocator.getInstanceFacadeInventario().consultarExistencias();
     }
 
+    public List<ExistenciaProducto> listarAlertas() {
+        return ServiceFacadeLocator.getInstanceFacadeInventario().listarAlertas();
+    }
+
     public int contarAlertas() {
         return ServiceFacadeLocator.getInstanceFacadeInventario().contarAlertas();
     }

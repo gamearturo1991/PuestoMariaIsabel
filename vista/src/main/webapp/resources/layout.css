@@ -182,3 +182,43 @@ html, body.app-body {
     padding: 24px 28px;
     box-sizing: border-box;
 }
+/* Aviso de stock bajo (PBI-PRO-US2) */
+a.pill-alertas {
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.aviso-alertas-texto {
+    margin: 0 0 10px 0;
+}
+
+.aviso-alertas-lista {
+    list-style: none;
+    margin: 0 0 14px 0;
+    padding: 0;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.aviso-alertas-lista li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 2px;
+    border-bottom: 1px solid #E5E9EC;
+    font-size: 14px;
+}
+
+.aviso-cant {
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.aviso-cant.agotado { color: #9B1C1C; }
+.aviso-cant.bajo    { color: #7A4A00; }
+
+.aviso-alertas-botones {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}

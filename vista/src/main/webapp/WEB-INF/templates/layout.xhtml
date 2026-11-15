@@ -15,6 +15,7 @@
 
 <h:body styleClass="app-body">
     <f:event type="preRenderView" listener="#{menuUI.verificarSesion}" />
+    <f:event type="preRenderView" listener="#{menuUI.prepararAviso}" />
 
     <div class="app-shell">
 
@@ -57,10 +58,11 @@
             <header class="topbar">
                 <h1 class="page-title"><ui:insert name="titulo">Sistema</ui:insert></h1>
                 <div class="topbar-right">
-                    <h:panelGroup layout="block" styleClass="pill pill-alertas" rendered="#{menuUI.alertas gt 0}">
+                    <h:link outcome="/inventario.xhtml" styleClass="pill pill-alertas"
+                            rendered="#{menuUI.alertas gt 0}" title="Ver inventario y alertas">
                         <span class="dot"></span>
-                        <h:outputText value="#{menuUI.alertas} alertas" />
-                    </h:panelGroup>
+                        <h:outputText value="#{menuUI.alertas} #{menuUI.alertas == 1 ? 'alerta' : 'alertas'}" />
+                    </h:link>
                     <span class="pill pill-fecha">#{menuUI.fechaHoy}</span>
                 </div>
             </header>
@@ -70,5 +72,33 @@
             </main>
         </div>
     </div>
+
+    <!-- ===== Aviso de stock bajo: una sola vez después de iniciar sesión ===== -->
+    <p:dialog id="dlgAlertas" widgetVar="dlgAlertas" modal="true" resizable="false" draggable="false"
+              closeOnEscape="true" width="520" visible="true"
+              rendered="#{menuUI.mostrarAviso}"
+              header="Productos por reabastecer">
+        <p class="aviso-alertas-texto">
+            Hay <b>#{menuUI.listaAviso.size()}</b> producto(s) con stock bajo o agotados
+            (<b>#{menuUI.agotadosAviso}</b> agotado(s)).
+        </p>
+        <ul class="aviso-alertas-lista">
+            <ui:repeat value="#{menuUI.listaAviso}" var="a">
+                <li>
+                    <span class="aviso-nombre">#{a.producto.nombre}</span>
+                    <span class="aviso-cant #{a.existencia le 0 ? 'agotado' : 'bajo'}">
+                        <h:outputText value="Agotado" rendered="#{a.existencia le 0}" />
+                        <h:outputText value="#{a.existencia} pzas (mín. #{a.producto.stockMinimo})"
+                                      rendered="#{a.existencia gt 0}" />
+                    </span>
+                </li>
+            </ui:repeat>
+        </ul>
+        <div class="aviso-alertas-botones">
+            <p:button value="Ver inventario" outcome="/inventario.xhtml" icon="pi pi-box" />
+            <p:commandButton value="Cerrar" type="button" styleClass="ui-button-flat"
+                             onclick="PF('dlgAlertas').hide()" />
+        </div>
+    </p:dialog>
 </h:body>
 </html>

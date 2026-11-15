@@ -1,5 +1,7 @@
 package ui;
 
+import Puesto.maria.isabel.delegate.ExistenciaProducto;
+import helper.InventarioHelper;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.SessionScoped;
 import jakarta.faces.context.FacesContext;
@@ -26,8 +28,17 @@ public class MenuBeanUI implements Serializable {
 
     private List<ItemMenu> items;
 
-    /** Cantidad de alertas de inventario. TODO: conectar con Inventario y alertas. */
+    private final InventarioHelper inventarioHelper = new InventarioHelper();
+
+    /** Alertas de stock (agotados o con stock bajo), consultadas a lo más cada 10 segundos para no cargar la base. */
+    private static final long VIGENCIA_ALERTAS_MS = 10_000;
     private int alertas = 0;
+    private long alertasConsultadasEn = 0;
+
+    /** Aviso de stock bajo que se muestra una sola vez después de iniciar sesión (PBI-PRO-US2). */
+    private boolean avisoMostrado = false;
+    private boolean mostrarAviso = false;
+    private List<ExistenciaProducto> listaAviso = new ArrayList<>();
 
     @PostConstruct
     public void init() {
@@ -89,12 +100,64 @@ public class MenuBeanUI implements Serializable {
         return texto.substring(0, 1).toUpperCase() + texto.substring(1);
     }
 
+    /** Número de productos agotados o con stock bajo, para el contador de la cabecera. */
     public int getAlertas() {
+        long ahora = System.currentTimeMillis();
+        if (ahora - alertasConsultadasEn > VIGENCIA_ALERTAS_MS) {
+            try {
+                alertas = inventarioHelper.contarAlertas();
+            } catch (RuntimeException ex) {
+                alertas = 0;
+            }
+            alertasConsultadasEn = ahora;
+        }
         return alertas;
     }
 
-    public void setAlertas(int alertas) {
-        this.alertas = alertas;
+    /** Fuerza que el contador se vuelva a calcular en la próxima lectura. */
+    public void refrescarAlertas() {
+        alertasConsultadasEn = 0;
+    }
+
+    /**
+     * Se ejecuta al abrir cada página (no en las peticiones ajax). La primera vez después de iniciar sesión
+     * prepara el aviso de stock bajo; en las siguientes páginas ya no se muestra.
+     */
+    public void prepararAviso() {
+        FacesContext fc = FacesContext.getCurrentInstance();
+        if (fc == null || fc.isPostback()) {
+            return;
+        }
+        if (avisoMostrado || loginUI == null || loginUI.getUsuario() == null
+                || loginUI.getUsuario().getId() == null) {
+            mostrarAviso = false;
+            return;
+        }
+        avisoMostrado = true;
+        try {
+            listaAviso = inventarioHelper.listarAlertas();
+        } catch (RuntimeException ex) {
+            listaAviso = new ArrayList<>();
+        }
+        mostrarAviso = !listaAviso.isEmpty();
+    }
+
+    public boolean isMostrarAviso() {
+        return mostrarAviso;
+    }
+
+    public List<ExistenciaProducto> getListaAviso() {
+        return listaAviso;
+    }
+
+    public int getAgotadosAviso() {
+        int n = 0;
+        for (ExistenciaProducto e : listaAviso) {
+            if (e.getExistencia() <= 0) {
+                n++;
+            }
+        }
+        return n;
     }
 
     public List<ItemMenu> getItems() {
