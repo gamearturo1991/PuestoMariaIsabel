@@ -14,6 +14,7 @@
     <class>puesto.maria.entity.Producto</class>
     <class>puesto.maria.entity.EntradaInventario</class>
     <class>puesto.maria.entity.Lote</class>
+    <class>puesto.maria.entity.Merma</class>
 
 
     <properties>

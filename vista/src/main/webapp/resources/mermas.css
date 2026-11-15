@@ -1,0 +1,90 @@
+/* Pantalla de mermas */
+
+.panel-merma {
+    max-width: 1100px;
+}
+
+.panel-merma .form-grid {
+    margin-bottom: 14px;
+}
+
+.panel-merma .ui-autocomplete,
+.panel-merma .ui-autocomplete-input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.filtros-merma {
+    max-width: 640px;
+}
+
+.botones-filtro {
+    margin-bottom: 14px;
+}
+
+/* Totales del periodo */
+.resumen-merma {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 14px;
+    margin: 0 0 16px 0;
+}
+
+.tarjeta-merma {
+    display: flex;
+    flex-direction: column;
+    min-width: 150px;
+    padding: 12px 16px;
+    background: #FDE8E8;
+    color: #9B1C1C;
+    border-radius: 12px;
+}
+
+.tarjeta-merma .n {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.tarjeta-merma .t {
+    font-size: 12px;
+}
+
+.tabla-totales {
+    flex: 1;
+    min-width: 280px;
+}
+
+.tabla-totales thead th,
+.tabla-totales tbody td {
+    padding: 6px 8px;
+    font-size: 13px;
+}
+
+/* Historial */
+.tabla-merma thead th,
+.tabla-merma tbody td {
+    padding: 6px 8px;
+    font-size: 13px;
+}
+
+.tabla-merma tr.fila-anulada td {
+    color: var(--texto-sec);
+    text-decoration: line-through;
+}
+
+.detalle-merma {
+    padding: 6px 12px;
+    font-size: 13px;
+    color: var(--primario-oscuro);
+}
+
+.linea-anulacion {
+    margin: 4px 0 0 12px;
+}
+
+/* Ventanas de confirmación */
+.dialogo-merma .texto-confirmar {
+    margin-bottom: 8px;
+    font-size: 14px;
+}

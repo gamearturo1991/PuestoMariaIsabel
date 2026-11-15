@@ -22,6 +22,7 @@ public class ServiceLocator {
     private static ProveedorDAO proveedorDAO;
     private static ProductoDAO productoDAO;
     private static EntradaInventarioDAO entradaInventarioDAO;
+    private static MermaDAO mermaDAO;
 
     private static EntityManager getEntityManager(){
         return HibernateUtil.getEntityManager();
@@ -79,6 +80,18 @@ public class ServiceLocator {
             entradaInventarioDAO = new EntradaInventarioDAO(getInstanceProductoDAO().getEntityManager());
         }
         return entradaInventarioDAO;
+    }
+
+    /**
+     * se crea la instancia de mermaDAO si esta no existe.
+     * Usa el mismo EntityManager que productoDAO para que los lotes que descuenta una merma sean los mismos
+     * objetos que usan las entradas y la existencia.
+     */
+    public static MermaDAO getInstanceMermaDAO(){
+        if(mermaDAO == null){
+            mermaDAO = new MermaDAO(getInstanceProductoDAO().getEntityManager());
+        }
+        return mermaDAO;
     }
 
 }
