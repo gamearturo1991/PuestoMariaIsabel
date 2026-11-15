@@ -1,0 +1,86 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html>
+<ui:composition template="/WEB-INF/templates/layout.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui">
+
+    <ui:define name="titulo">Categorías</ui:define>
+
+    <ui:define name="head">
+        <h:outputStylesheet name="productos.css" />
+    </ui:define>
+
+    <ui:define name="contenido">
+
+        <p:growl id="growl" showDetail="true" life="5000" />
+
+        <h:form id="formTabla">
+            <div class="productos-barra">
+                <span class="espacio" />
+                <p:commandButton value="Nueva categoría" icon="pi pi-plus"
+                                 actionListener="#{categoriaUI.nueva}"
+                                 process="@this" update=":dlgCat"
+                                 oncomplete="PF('dlgCategoria').show()" />
+            </div>
+
+            <p:dataTable id="tabla" value="#{categoriaUI.categorias}" var="c"
+                         rowKey="#{c.id}" tableStyle="table-layout:auto;width:100%"
+                         styleClass="tabla-productos"
+                         emptyMessage="Todavía no hay categorías">
+
+                <p:column headerText="Nombre" sortBy="#{c.nombre}">
+                    <h:outputText value="#{c.nombre}" />
+                </p:column>
+                <p:column headerText="Productos" styleClass="num" sortBy="#{categoriaUI.productosDe(c)}">
+                    <h:outputText value="#{categoriaUI.productosDe(c)}" />
+                </p:column>
+                <p:column headerText="Acciones" styleClass="col-acciones">
+                    <p:commandButton icon="pi pi-pencil" title="Modificar"
+                                     styleClass="rounded-button ui-button-flat"
+                                     actionListener="#{categoriaUI.editar(c)}"
+                                     process="@this" update=":dlgCat"
+                                     oncomplete="PF('dlgCategoria').show()" />
+                    <p:commandButton icon="pi pi-trash" title="Eliminar"
+                                     styleClass="rounded-button ui-button-flat ui-button-danger"
+                                     actionListener="#{categoriaUI.eliminar(c)}"
+                                     process="@this" update="tabla :growl">
+                        <p:confirm header="Eliminar categoría"
+                                   message="¿Eliminar la categoría #{c.nombre}? Solo se puede si no tiene productos."
+                                   icon="pi pi-exclamation-triangle" />
+                    </p:commandButton>
+                </p:column>
+            </p:dataTable>
+
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                <p:commandButton value="Sí, eliminar" type="button" styleClass="ui-confirmdialog-yes" />
+                <p:commandButton value="Cancelar" type="button" styleClass="ui-confirmdialog-no ui-button-flat" />
+            </p:confirmDialog>
+        </h:form>
+
+        <!-- ===== Formulario: registrar / modificar ===== -->
+        <p:dialog id="dlgCat" widgetVar="dlgCategoria" modal="true" resizable="false" draggable="false"
+                  header="#{categoriaUI.categoria.id == null ? 'Nueva categoría' : 'Modificar categoría'}"
+                  width="420" closeOnEscape="true">
+            <h:form id="formDialogo">
+                <div class="form-grid">
+                    <p:outputLabel for="nombre" value="Nombre" />
+                    <p:inputText id="nombre" value="#{categoriaUI.categoria.nombre}" maxlength="100"
+                                 placeholder="ej. Bebidas" />
+                </div>
+                <div class="dialogo-botones">
+                    <p:commandButton value="Cancelar" styleClass="ui-button-flat" type="button"
+                                     onclick="PF('dlgCategoria').hide()" />
+                    <p:commandButton value="Guardar" icon="pi pi-check"
+                                     actionListener="#{categoriaUI.guardar}"
+                                     process="@form" update="formDialogo :formTabla:tabla :growl"
+                                     oncomplete="if (args &amp;&amp; args.guardado) PF('dlgCategoria').hide()" />
+                </div>
+            </h:form>
+        </p:dialog>
+
+    </ui:define>
+
+</ui:composition>
