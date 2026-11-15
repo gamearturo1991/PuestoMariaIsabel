@@ -91,6 +91,7 @@ public class ProductoBeanUI implements Serializable {
 
     /** Prepara el formulario para registrar un producto nuevo. */
     public void nuevo() {
+        categorias = helper.categorias();
         producto = new Producto();
         producto.setActivo(true);
         categoriaId = null;
@@ -99,6 +100,7 @@ public class ProductoBeanUI implements Serializable {
 
     /** Carga un producto existente en el formulario para modificarlo. */
     public void editar(Producto seleccionado) {
+        categorias = helper.categorias();
         producto = seleccionado;
         categoriaId = seleccionado.getIdCategoria() == null ? null : seleccionado.getIdCategoria().getId();
         proveedorId = seleccionado.getIdProveedor() == null ? null : seleccionado.getIdProveedor().getId();

@@ -44,12 +44,12 @@ public class DelegateProducto {
         dao().update(producto);
     }
 
-    /** Todos los productos (pantalla de administración de productos). */
     /** Existencia de cada producto (id -> piezas); los productos sin lotes no aparecen y valen 0. */
     public Map<Integer, Long> existencias() {
         return dao().existenciasPorProducto();
     }
 
+    /** Todos los productos (pantalla de administración de productos). */
     public List<Producto> listarProductos() {
         return dao().listarTodos();
     }
