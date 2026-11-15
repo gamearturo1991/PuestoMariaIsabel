@@ -22,7 +22,7 @@ public class ServiceLocator {
     private static ProveedorDAO proveedorDAO;
     private static ProductoDAO productoDAO;
     private static EntradaInventarioDAO entradaInventarioDAO;
-
+    private static LoteDAO loteDAO;
     private static EntityManager getEntityManager(){
         return HibernateUtil.getEntityManager();
     }
@@ -79,6 +79,14 @@ public class ServiceLocator {
             entradaInventarioDAO = new EntradaInventarioDAO(getInstanceProductoDAO().getEntityManager());
         }
         return entradaInventarioDAO;
+    }
+
+
+    public static LoteDAO getInstanceLoteDAO() {
+        if (loteDAO == null) {
+            loteDAO = new LoteDAO(HibernateUtil.getEntityManager());
+        }
+        return loteDAO;
     }
 
 }
