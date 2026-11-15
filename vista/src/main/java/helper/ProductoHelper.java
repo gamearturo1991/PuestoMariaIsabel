@@ -9,6 +9,7 @@ import puesto.maria.entity.Proveedor;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Puente entre ProductoBeanUI y la fachada de productos.
@@ -29,6 +30,10 @@ public class ProductoHelper implements Serializable {
 
     public void deshabilitar(Producto producto) {
         facade().deshabilitarProducto(producto);
+    }
+
+    public Map<Integer, Long> existencias() {
+        return facade().existencias();
     }
 
     public List<Producto> listar() {

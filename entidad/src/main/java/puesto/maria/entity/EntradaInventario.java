@@ -3,6 +3,8 @@ package puesto.maria.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 
@@ -28,7 +30,7 @@ public class EntradaInventario {
     @Column(name = "fecha_hora")
     private Instant fechaHora;
 
-    @Lob
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
     @Column(name = "observaciones")
     private String observaciones;
 

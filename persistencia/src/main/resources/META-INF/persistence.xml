@@ -12,6 +12,8 @@
     <class>puesto.maria.entity.Categoria</class>
     <class>puesto.maria.entity.Proveedor</class>
     <class>puesto.maria.entity.Producto</class>
+    <class>puesto.maria.entity.EntradaInventario</class>
+    <class>puesto.maria.entity.Lote</class>
 
 
     <properties>

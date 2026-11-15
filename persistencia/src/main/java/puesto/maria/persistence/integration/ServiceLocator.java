@@ -21,6 +21,7 @@ public class ServiceLocator {
     private static CategoriaDAO categoriaDAO;
     private static ProveedorDAO proveedorDAO;
     private static ProductoDAO productoDAO;
+    private static EntradaInventarioDAO entradaInventarioDAO;
 
     private static EntityManager getEntityManager(){
         return HibernateUtil.getEntityManager();
@@ -66,6 +67,18 @@ public class ServiceLocator {
             productoDAO = new ProductoDAO(getEntityManager());
         }
         return productoDAO;
+    }
+
+    /**
+     * se crea la instancia de entradaInventarioDAO si esta no existe.
+     * Usa el mismo EntityManager que productoDAO para que el producto actualizado por una entrada
+     * sea el mismo objeto que ve el listado de productos.
+     */
+    public static EntradaInventarioDAO getInstanceEntradaInventarioDAO(){
+        if(entradaInventarioDAO == null){
+            entradaInventarioDAO = new EntradaInventarioDAO(getInstanceProductoDAO().getEntityManager());
+        }
+        return entradaInventarioDAO;
     }
 
 }

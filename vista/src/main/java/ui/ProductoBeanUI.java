@@ -14,7 +14,9 @@ import puesto.maria.entity.Proveedor;
 import java.io.Serializable;
 import java.text.Normalizer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Pantalla de productos (PBI-PRO): registrar (US1), modificar y deshabilitar (US4),
@@ -35,6 +37,9 @@ public class ProductoBeanUI implements Serializable {
     private Integer categoriaId;
     private Integer proveedorId;
 
+    /** Existencia por id de producto, calculada con los lotes cada vez que se recarga el listado. */
+    private Map<Integer, Long> existencias = new HashMap<>();
+
     private String textoBusqueda;
     private boolean verDeshabilitados = true;
 
@@ -52,6 +57,7 @@ public class ProductoBeanUI implements Serializable {
      */
     public void cargar() {
         List<Producto> todos = helper.listar();
+        existencias = helper.existencias();
         String t = textoBusqueda == null ? "" : normalizar(textoBusqueda);
         List<Producto> filtrados = new ArrayList<>();
         for (Producto p : todos) {
@@ -190,4 +196,14 @@ public class ProductoBeanUI implements Serializable {
         this.textoBusqueda = textoBusqueda;
     }
 
+    /** Piezas que hay de un producto (suma de sus lotes); 0 si no tiene. */
+    public long existenciaDe(Producto p) {
+        Long n = p == null ? null : existencias.get(p.getId());
+        return n == null ? 0 : n;
+    }
+
+    /** True si la existencia es igual o menor al stock mínimo (para resaltarla en la tabla). */
+    public boolean existenciaBaja(Producto p) {
+        return p != null && p.getStockMinimo() != null && existenciaDe(p) <= p.getStockMinimo();
+    }
 }
