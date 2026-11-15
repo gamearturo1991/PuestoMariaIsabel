@@ -1,0 +1,116 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html>
+<ui:composition template="/WEB-INF/templates/layout.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui">
+
+    <ui:define name="titulo">Inventario y alertas</ui:define>
+
+    <ui:define name="head">
+        <h:outputStylesheet name="productos.css" />
+        <h:outputStylesheet name="inventario.css" />
+    </ui:define>
+
+    <ui:define name="contenido">
+
+        <h:form id="formInv">
+
+            <!-- Se actualiza solo cada 30 segundos para ver la existencia en tiempo real -->
+            <p:poll interval="30" listener="#{inventarioUI.actualizar}" update="resumen tabla" />
+
+            <!-- ===== Resumen por estado (al pulsar una tarjeta se filtra la tabla) ===== -->
+            <h:panelGroup id="resumen" layout="block" styleClass="resumen-inv">
+                <p:commandLink actionListener="#{inventarioUI.filtrarPorEstado('AGOTADO')}"
+                               process="@this" update="resumen tabla"
+                               styleClass="tarjeta tarjeta-agotado #{inventarioUI.estadoFiltro == 'AGOTADO' ? 'activa' : ''}">
+                    <span class="n">#{inventarioUI.agotados}</span>
+                    <span class="t">Agotados</span>
+                </p:commandLink>
+                <p:commandLink actionListener="#{inventarioUI.filtrarPorEstado('BAJO')}"
+                               process="@this" update="resumen tabla"
+                               styleClass="tarjeta tarjeta-bajo #{inventarioUI.estadoFiltro == 'BAJO' ? 'activa' : ''}">
+                    <span class="n">#{inventarioUI.bajos}</span>
+                    <span class="t">Stock bajo</span>
+                </p:commandLink>
+                <p:commandLink actionListener="#{inventarioUI.filtrarPorEstado('SOBRE_MAXIMO')}"
+                               process="@this" update="resumen tabla"
+                               styleClass="tarjeta tarjeta-sobre #{inventarioUI.estadoFiltro == 'SOBRE_MAXIMO' ? 'activa' : ''}">
+                    <span class="n">#{inventarioUI.sobreMaximo}</span>
+                    <span class="t">Sobre el máximo</span>
+                </p:commandLink>
+                <p:commandLink actionListener="#{inventarioUI.filtrarPorEstado('NORMAL')}"
+                               process="@this" update="resumen tabla"
+                               styleClass="tarjeta tarjeta-normal #{inventarioUI.estadoFiltro == 'NORMAL' ? 'activa' : ''}">
+                    <span class="n">#{inventarioUI.normales}</span>
+                    <span class="t">Normales</span>
+                </p:commandLink>
+            </h:panelGroup>
+
+            <!-- ===== Búsqueda y actualización ===== -->
+            <div class="productos-barra">
+                <span class="ui-input-icon-left buscador">
+                    <i class="pi pi-search" />
+                    <p:inputText id="buscar" value="#{inventarioUI.textoBusqueda}"
+                                 placeholder="Buscar por código o nombre" autocomplete="off">
+                        <p:ajax event="keyup" delay="300" listener="#{inventarioUI.filtrar}" update="tabla" />
+                    </p:inputText>
+                </span>
+
+                <p:selectOneMenu id="estado" value="#{inventarioUI.estadoFiltro}" styleClass="filtro-estado">
+                    <f:selectItem itemLabel="Todos los estados" itemValue="" />
+                    <f:selectItems value="#{inventarioUI.estados}" var="e"
+                                   itemLabel="#{e.etiqueta}" itemValue="#{e.name()}" />
+                    <p:ajax listener="#{inventarioUI.filtrar}" update="resumen tabla" />
+                </p:selectOneMenu>
+
+                <span class="espacio" />
+
+                <p:commandButton value="Actualizar" icon="pi pi-refresh" styleClass="ui-button-flat"
+                                 actionListener="#{inventarioUI.actualizar}"
+                                 process="@this" update="resumen tabla" />
+            </div>
+
+            <p:dataTable id="tabla" value="#{inventarioUI.filas}" var="e"
+                         rowKey="#{e.producto.id}" paginator="true" rows="15"
+                         paginatorPosition="bottom"
+                         tableStyle="table-layout:auto;width:100%"
+                         styleClass="tabla-productos"
+                         emptyMessage="No hay productos que mostrar">
+
+                <p:column headerText="Código">
+                    <h:outputText value="#{e.producto.codigoCorto}" styleClass="codigo" />
+                </p:column>
+                <p:column headerText="Nombre" sortBy="#{e.producto.nombre}">
+                    <h:outputText value="#{e.producto.nombre}" />
+                </p:column>
+                <p:column headerText="Categoría">
+                    <h:outputText value="#{e.producto.idCategoria.nombre}" />
+                </p:column>
+                <p:column headerText="Existencia" styleClass="num" sortBy="#{e.existencia}">
+                    <h:outputText value="#{e.existencia}"
+                                  styleClass="#{e.alerta ? 'existencia-baja' : 'existencia'}" />
+                </p:column>
+                <p:column headerText="Mín." styleClass="num">
+                    <h:outputText value="#{e.producto.stockMinimo}" />
+                </p:column>
+                <p:column headerText="Máx." styleClass="num">
+                    <h:outputText value="#{e.producto.stockMaximo}" />
+                </p:column>
+                <p:column headerText="Estado" sortBy="#{e.estado.ordinal()}">
+                    <h:outputText value="#{e.estado.etiqueta}"
+                                  styleClass="estado #{inventarioUI.claseEstado(e.estado)}" />
+                </p:column>
+            </p:dataTable>
+
+            <div class="nota-inv">
+                La existencia es la suma de las piezas disponibles de cada producto (se actualiza sola cada 30 segundos).
+                Stock bajo: existencia menor o igual al mínimo. Agotado: existencia 0. El máximo es solo una referencia.
+            </div>
+        </h:form>
+
+    </ui:define>
+
+</ui:composition>
