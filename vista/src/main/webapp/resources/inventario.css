@@ -1,0 +1,53 @@
+/* Pantalla de inventario y alertas */
+
+.resumen-inv {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.resumen-inv .tarjeta {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.resumen-inv .tarjeta .n {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.resumen-inv .tarjeta .t {
+    font-size: 13px;
+}
+
+.resumen-inv .tarjeta.activa {
+    border-color: currentColor;
+}
+
+.tarjeta-agotado { background: #FDE8E8; color: #9B1C1C; }
+.tarjeta-bajo    { background: #FEF3C7; color: #7A4A00; }
+.tarjeta-sobre   { background: #E0ECFF; color: #1E3A8A; }
+.tarjeta-normal  { background: #E3F4EC; color: #0F5132; }
+
+.estado-agotado { background: #FDE8E8; color: #9B1C1C; }
+.estado-bajo    { background: #FEF3C7; color: #7A4A00; }
+.estado-sobre   { background: #E0ECFF; color: #1E3A8A; }
+.estado-normal  { background: #E3F4EC; color: #0F5132; }
+
+.filtro-estado {
+    min-width: 190px;
+}
+
+.nota-inv {
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--texto-sec);
+}
