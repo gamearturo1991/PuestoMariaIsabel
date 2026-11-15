@@ -17,6 +17,10 @@ public class FacadeInventario {
         return delegateInventario.consultarExistencias();
     }
 
+    public List<ExistenciaProducto> listarAlertas() {
+        return delegateInventario.listarAlertas();
+    }
+
     public int contarAlertas() {
         return delegateInventario.contarAlertas();
     }

@@ -32,14 +32,22 @@ public class DelegateInventario {
         return lista;
     }
 
-    /** Cantidad de productos activos agotados o con stock bajo. */
-    public int contarAlertas() {
-        int n = 0;
+    /** Productos activos agotados o con stock bajo; primero los agotados y luego los de menor existencia. */
+    public List<ExistenciaProducto> listarAlertas() {
+        List<ExistenciaProducto> alertas = new ArrayList<>();
         for (ExistenciaProducto e : consultarExistencias()) {
             if (e.isAlerta()) {
-                n++;
+                alertas.add(e);
             }
         }
-        return n;
+        alertas.sort(java.util.Comparator
+                .comparingLong(ExistenciaProducto::getExistencia)
+                .thenComparing(e -> e.getProducto().getNombre(), String.CASE_INSENSITIVE_ORDER));
+        return alertas;
+    }
+
+    /** Cantidad de productos activos agotados o con stock bajo. */
+    public int contarAlertas() {
+        return listarAlertas().size();
     }
 }
