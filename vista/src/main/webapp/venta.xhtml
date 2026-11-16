@@ -1,0 +1,202 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html>
+<ui:composition template="/WEB-INF/templates/layout.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui">
+
+    <ui:define name="titulo">Registrar venta</ui:define>
+
+    <ui:define name="head">
+        <h:outputStylesheet name="venta.css" />
+    </ui:define>
+
+    <ui:define name="contenido">
+        <p:growl id="growl" showDetail="true" life="4000" />
+
+        <div class="venta-layout">
+            <div class="venta-main">
+                <h:form id="formVenta">
+                    <div class="venta-barra">
+                        <div class="buscador">
+                            <p:autoComplete id="buscarProd" value="#{ventaUI.productoSeleccionado}"
+                                            completeMethod="#{ventaUI.completarProducto}"
+                                            var="p" itemValue="#{p}" itemLabel="#{p.nombre}"
+                                            placeholder="Escanear o buscar producto..."
+                                            minQueryLength="1" queryDelay="300"
+                                            forceSelection="true" emptyMessage="No se encontraron productos"
+                                            widgetVar="acProducto" style="width: 100%;">
+                                <p:column headerText="SKU">
+                                    <h:outputText value="#{p.codigoCorto}" />
+                                </p:column>
+                                <p:column headerText="Producto">
+                                    <h:outputText value="#{p.nombre}" />
+                                </p:column>
+                                <p:column headerText="Precio">
+                                    <h:outputText value="#{p.precioVenta}">
+                                        <f:convertNumber pattern="$#,##0.00" />
+                                    </h:outputText>
+                                </p:column>
+                                <p:ajax event="itemSelect" listener="#{ventaUI.onProductoSeleccionado}"
+                                        update="tablaDetalles formResumen buscarProd"
+                                        oncomplete="PF('acProducto').getJQ().focus();" />
+                            </p:autoComplete>
+                        </div>
+
+                        <div class="cliente">
+                            <p:selectOneMenu value="#{ventaUI.clienteSeleccionado}" style="width: 100%;">
+                                <f:selectItem itemLabel="Cliente: Público en general" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{ventaUI.clientes}" var="c" itemLabel="#{c.nombre}" itemValue="#{c}" />
+                            </p:selectOneMenu>
+                        </div>
+                    </div>
+
+                    <p:dataTable id="tablaDetalles" value="#{ventaUI.listaDetalles}" var="d"
+                                 emptyMessage="No hay productos en la venta" styleClass="tabla-venta">
+                        <p:column headerText="#" style="width: 40px;">
+                            <h:outputText value="#{ventaUI.listaDetalles.indexOf(d) + 1}" />
+                        </p:column>
+                        <p:column headerText="SKU">
+                            <h:outputText value="#{d.idProducto.codigoCorto}" styleClass="codigo" />
+                        </p:column>
+                        <p:column headerText="Producto">
+                            <h:outputText value="#{d.idProducto.nombre}" />
+                        </p:column>
+                        <p:column headerText="Cantidad" style="width: 110px;">
+                            <p:spinner value="#{d.cantidad}" min="1" style="width: 80px;">
+                                <p:ajax listener="#{ventaUI.actualizarCantidad(d)}" update="tablaDetalles formResumen" />
+                            </p:spinner>
+                        </p:column>
+                        <p:column headerText="Precio" styleClass="num" style="text-align: right;">
+                            <h:outputText value="#{d.precioUnitario}">
+                                <f:convertNumber pattern="$#,##0.00" />
+                            </h:outputText>
+                        </p:column>
+                        <p:column headerText="Subtotal" styleClass="num" style="text-align: right;">
+                            <h:outputText value="#{d.subtotal}">
+                                <f:convertNumber pattern="$#,##0.00" />
+                            </h:outputText>
+                        </p:column>
+                        <p:column styleClass="col-acciones">
+                            <p:commandButton icon="pi pi-trash" styleClass="ui-button-danger ui-button-flat rounded-button"
+                                             actionListener="#{ventaUI.eliminarDetalle(d)}" update="tablaDetalles formResumen" />
+                        </p:column>
+                    </p:dataTable>
+                </h:form>
+            </div>
+
+            <div class="venta-sidebar">
+                <h:form id="formResumen">
+                    <div class="resumen-venta">
+                        <div class="resumen-header">
+                            <div>
+                                <small>Folio</small>
+
+                                <span>#{ventaUI.folioActual}</span>
+                            </div>
+                            <div style="text-align: right;">
+                                <small>Artículos</small>
+                                <span>#{ventaUI.totalArticulos}</span>
+                            </div>
+                        </div>
+
+                        <hr style="border: 0; border-top: 1px solid #E0E4E8;" />
+
+                        <small class="resumen-total-label">Total a pagar</small>
+                        <div class="resumen-total">
+                            <h:outputText value="#{ventaUI.total}">
+                                <f:convertNumber pattern="$#,##0.00" />
+                            </h:outputText>
+                        </div>
+
+                        <p:commandButton value="Cobrar" icon="pi pi-shopping-cart" styleClass="btn-cobrar"
+                                         actionListener="#{ventaUI.abrirModalCobro}" update="formCobro" oncomplete="PF('dlgCobro').show()" />
+                        <p:commandButton value="Cancelar venta" icon="pi pi-times" styleClass="btn-cancelar"
+                                         actionListener="#{ventaUI.cancelarVenta}" update="formVenta formResumen">
+                            <p:confirm header="Cancelar venta" message="¿Estás seguro de cancelar toda la venta?" icon="pi pi-exclamation-triangle" />
+                        </p:commandButton>
+                    </div>
+                </h:form>
+            </div>
+        </div>
+
+        <p:dialog id="dlgCobro" widgetVar="dlgCobro" header="Cobrar venta" modal="true"
+                  resizable="false" draggable="false" width="500" styleClass="dialogo-cobro">
+            <h:form id="formCobro">
+                <div class="cobro-header">
+                    <small>Total a pagar</small>
+                </div>
+                <div class="cobro-total">
+                    <h:outputText value="#{ventaUI.total}">
+                        <f:convertNumber pattern="$#,##0.00" />
+                    </h:outputText>
+                </div>
+
+                <div class="cobro-forma-pago">Forma de pago</div>
+
+                <div class="pago-row">
+                    <label>Efectivo</label>
+                    <p:inputNumber value="#{ventaUI.efectivo}" symbol="$ " decimalPlaces="2" minValue="0">
+                        <p:ajax listener="#{ventaUI.calcularPagos()}" update="@form" />
+                    </p:inputNumber>
+                </div>
+                <div class="pago-row">
+                    <label>Transferencia</label>
+                    <p:inputNumber value="#{ventaUI.transferencia}" symbol="$ " decimalPlaces="2" minValue="0">
+                        <p:ajax listener="#{ventaUI.calcularPagos()}" update="@form" />
+                    </p:inputNumber>
+                </div>
+                <div class="pago-row">
+                    <label>Tarjeta</label>
+                    <p:inputNumber value="#{ventaUI.tarjeta}" symbol="$ " decimalPlaces="2" minValue="0">
+                        <p:ajax listener="#{ventaUI.calcularPagos()}" update="@form" />
+                    </p:inputNumber>
+                </div>
+
+                <div class="comision-nota">
+                    Comisión del terminal 4.5%
+                    <h:outputText value="#{ventaUI.comisionTarjeta}">
+                        <f:convertNumber pattern="$#,##0.00" />
+                    </h:outputText>
+                </div>
+
+                <div class="resumen-pagos">
+                    <div>
+                        <span>Pagado</span>
+                        <strong>#{ventaUI.efectivo + ventaUI.transferencia + ventaUI.tarjeta}</strong>
+                    </div>
+                    <div>
+                        <span>Falta</span>
+                        <strong>#{ventaUI.total - (ventaUI.efectivo + ventaUI.transferencia + ventaUI.tarjeta)}</strong>
+                    </div>
+                    <div>
+                        <span>Cambio</span>
+                        <strong>#{ventaUI.cambio}</strong>
+                    </div>
+                </div>
+
+                <div style="padding: 0 20px 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <p:selectBooleanCheckbox value="#{ventaUI.generarPdf}" itemLabel="Generar ticket en PDF" />
+                    <span class="pago-completo" rendered="#{ventaUI.pagoCompleto}">
+                        <i class="pi pi-check-circle" /> Paga completa
+                    </span>
+                </div>
+
+                <div class="dialogo-footer">
+                    <p:commandButton value="Regresar" type="button" styleClass="ui-button-flat" onclick="PF('dlgCobro').hide()" />
+                    <p:commandButton value="Confirmar venta" icon="pi pi-check" styleClass="ui-button-success"
+                                     actionListener="#{ventaUI.confirmarVenta}"
+                                     disabled="#{!ventaUI.pagoCompleto}"
+                                     update=":formVenta :formResumen :formCobro :growl" />
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+            <p:commandButton value="Sí, cancelar" type="button" styleClass="ui-confirmdialog-yes" />
+            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-flat" />
+        </p:confirmDialog>
+    </ui:define>
+</ui:composition>

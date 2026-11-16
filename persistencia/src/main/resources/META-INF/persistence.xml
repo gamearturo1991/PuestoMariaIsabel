@@ -6,7 +6,6 @@
   <persistence-unit name="persistencePU">
     <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
 
-
     <!-- Declaración manual de entidades -->
     <class>puesto.maria.entity.Usuario</class>
     <class>puesto.maria.entity.Categoria</class>
@@ -14,7 +13,12 @@
     <class>puesto.maria.entity.Producto</class>
     <class>puesto.maria.entity.EntradaInventario</class>
     <class>puesto.maria.entity.Lote</class>
-
+    <class>puesto.maria.entity.Cliente</class>
+    <class>puesto.maria.entity.Bitacora</class>
+    <class>puesto.maria.entity.Venta</class>
+    <class>puesto.maria.entity.DetalleVenta</class>
+    <class>puesto.maria.entity.PagoVenta</class>
+    <class>puesto.maria.entity.DetalleVentaLote</class>
 
     <properties>
       <property name="jakarta.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>
@@ -22,11 +26,9 @@
       <property name="jakarta.persistence.jdbc.user" value="root"/>
       <property name="jakarta.persistence.jdbc.password" value="root"/>
 
-
       <property name="hibernate.show_sql" value="true"/>
       <property name="hibernate.format_sql" value="true"/>
-      <property name="hibernate.hbm2ddl.auto" value="validate"/>
-
+      <property name="hibernate.hbm2ddl.auto" value="none"/>
 
       <property name="hibernate.hikari.minimumIdle" value="5"/>
       <property name="hibernate.hikari.maximumPoolSize" value="10"/>
@@ -34,4 +36,3 @@
     </properties>
   </persistence-unit>
 </persistence>
-

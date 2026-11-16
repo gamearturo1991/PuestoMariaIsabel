@@ -37,16 +37,14 @@ public class Bitacora {
     @Column(name = "id_registro")
     private Integer idRegistro;
 
-    @Lob
-    @Column(name = "valor_anterior")
+    @Column(name = "valor_anterior", columnDefinition = "TEXT")
     private String valorAnterior;
 
     @Lob
     @Column(name = "valor_nuevo")
     private String valorNuevo;
 
-    @Lob
-    @Column(name = "motivo")
+    @Column(name = "motivo", columnDefinition = "TEXT")
     private String motivo;
 
     public Integer getId() {

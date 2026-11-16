@@ -89,4 +89,19 @@ public class ServiceLocator {
         return loteDAO;
     }
 
+    private static VentaDAO ventaDAO;
+    public static VentaDAO getInstanceVentaDAO() {
+        if (ventaDAO == null) {
+            ventaDAO = new VentaDAO(getEntityManager());
+        }
+        return ventaDAO;
+    }
+
+    private static ClienteDAO clienteDAO;
+    public static ClienteDAO getInstanceClienteDAO() {
+        if (clienteDAO == null) {
+            clienteDAO = new ClienteDAO(getEntityManager());
+        }
+        return clienteDAO;
+    }
 }
