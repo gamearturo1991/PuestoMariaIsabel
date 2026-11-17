@@ -1,0 +1,115 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html>
+<ui:composition template="/WEB-INF/templates/layout.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui">
+
+    <ui:define name="titulo">Proveedores</ui:define>
+
+    <ui:define name="head">
+        <h:outputStylesheet name="productos.css" />
+    </ui:define>
+
+    <ui:define name="contenido">
+
+        <p:growl id="growl" showDetail="true" life="5000" />
+
+        <h:form id="formTabla">
+            <div class="productos-barra">
+                <span class="espacio" />
+                <p:commandButton value="Nuevo proveedor" icon="pi pi-plus"
+                                 actionListener="#{proveedorUI.nuevo}"
+                                 process="@this" update=":dlgProv"
+                                 oncomplete="PF('dlgProveedor').show()" />
+            </div>
+
+            <p:dataTable id="tabla" value="#{proveedorUI.proveedores}" var="pv"
+                         rowKey="#{pv.id}" tableStyle="table-layout:auto;width:100%"
+                         styleClass="tabla-productos"
+                         rowStyleClass="#{pv.activo ? '' : 'fila-deshabilitada'}"
+                         emptyMessage="Todavía no hay proveedores">
+
+                <p:column headerText="Nombre" sortBy="#{pv.nombre}">
+                    <h:outputText value="#{pv.nombre}" />
+                </p:column>
+                <p:column headerText="Empresa" sortBy="#{pv.empresa}">
+                    <h:outputText value="#{pv.empresa}" />
+                </p:column>
+                <p:column headerText="Correo">
+                    <h:outputText value="#{pv.correo}" />
+                </p:column>
+                <p:column headerText="Teléfono">
+                    <h:outputText value="#{pv.telefono}" />
+                </p:column>
+                <p:column headerText="Productos" styleClass="num" sortBy="#{proveedorUI.productosDe(pv)}">
+                    <h:outputText value="#{proveedorUI.productosDe(pv)}" />
+                </p:column>
+                <p:column headerText="Estado">
+                    <h:outputText value="#{pv.activo ? 'Activo' : 'Inactivo'}"
+                                  styleClass="estado #{pv.activo ? 'estado-activo' : 'estado-baja'}" />
+                </p:column>
+                <p:column headerText="Acciones" styleClass="col-acciones">
+                    <p:commandButton icon="pi pi-pencil" title="Modificar"
+                                     styleClass="rounded-button ui-button-flat"
+                                     actionListener="#{proveedorUI.editar(pv)}"
+                                     process="@this" update=":dlgProv"
+                                     oncomplete="PF('dlgProveedor').show()" />
+                    <p:commandButton icon="#{pv.activo ? 'pi pi-ban' : 'pi pi-check-circle'}"
+                                     title="#{pv.activo ? 'Desactivar' : 'Activar'}"
+                                     styleClass="rounded-button ui-button-flat"
+                                     actionListener="#{proveedorUI.cambiarEstado(pv)}"
+                                     process="@this" update="tabla :growl" />
+                    <p:commandButton icon="pi pi-trash" title="Eliminar"
+                                     styleClass="rounded-button ui-button-flat ui-button-danger"
+                                     actionListener="#{proveedorUI.eliminar(pv)}"
+                                     process="@this" update="tabla :growl">
+                        <p:confirm header="Eliminar proveedor"
+                                   message="¿Eliminar a #{pv.nombre}? Solo se puede si no tiene productos ni entradas."
+                                   icon="pi pi-exclamation-triangle" />
+                    </p:commandButton>
+                </p:column>
+            </p:dataTable>
+
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                <p:commandButton value="Sí, eliminar" type="button" styleClass="ui-confirmdialog-yes" />
+                <p:commandButton value="Cancelar" type="button" styleClass="ui-confirmdialog-no ui-button-flat" />
+            </p:confirmDialog>
+        </h:form>
+
+        <!-- ===== Formulario: registrar / modificar ===== -->
+        <p:dialog id="dlgProv" widgetVar="dlgProveedor" modal="true" resizable="false" draggable="false"
+                  header="#{proveedorUI.proveedor.id == null ? 'Nuevo proveedor' : 'Modificar proveedor'}"
+                  width="460" closeOnEscape="true">
+            <h:form id="formDialogo">
+                <div class="form-grid">
+                    <p:outputLabel for="nombre" value="Nombre" />
+                    <p:inputText id="nombre" value="#{proveedorUI.proveedor.nombre}" maxlength="255"
+                                 placeholder="ej. Coca-Cola" />
+
+                    <p:outputLabel for="empresa" value="Empresa" />
+                    <p:inputText id="empresa" value="#{proveedorUI.proveedor.empresa}" maxlength="255" />
+
+                    <p:outputLabel for="correo" value="Correo" />
+                    <p:inputText id="correo" value="#{proveedorUI.proveedor.correo}" maxlength="255"
+                                 placeholder="proveedor@correo.com" />
+
+                    <p:outputLabel for="telefono" value="Teléfono" />
+                    <p:inputText id="telefono" value="#{proveedorUI.proveedor.telefono}" maxlength="50" />
+                </div>
+                <div class="dialogo-botones">
+                    <p:commandButton value="Cancelar" styleClass="ui-button-flat" type="button"
+                                     onclick="PF('dlgProveedor').hide()" />
+                    <p:commandButton value="Guardar" icon="pi pi-check"
+                                     actionListener="#{proveedorUI.guardar}"
+                                     process="@form" update="formDialogo :formTabla:tabla :growl"
+                                     oncomplete="if (args &amp;&amp; args.guardado) PF('dlgProveedor').hide()" />
+                </div>
+            </h:form>
+        </p:dialog>
+
+    </ui:define>
+
+</ui:composition>

@@ -5,9 +5,11 @@ import Puesto.maria.isabel.facade.FacadeEntradaInventario;
 import Puesto.maria.isabel.facade.FacadeInventario;
 import Puesto.maria.isabel.facade.FacadeMerma;
 import Puesto.maria.isabel.facade.FacadeProducto;
+import Puesto.maria.isabel.facade.FacadeProveedor;
 import Puesto.maria.isabel.facade.FacadeUsuario;
 import puesto.maria.entity.Usuario;
 import Puesto.maria.isabel.facade.FacadeVenta;
+
 
 public class ServiceFacadeLocator {
 
@@ -18,6 +20,7 @@ public class ServiceFacadeLocator {
     private static FacadeCategoria facadeCategoria;
     private static FacadeMerma facadeMerma;
     private static FacadeVenta facadeVenta;
+    private static FacadeProveedor facadeProveedor;
 
     public static FacadeUsuario getInstanceFacadeUsuario() {
         if (facadeUsuario == null) {
@@ -68,5 +71,12 @@ public class ServiceFacadeLocator {
             facadeVenta = new FacadeVenta();
         }
         return facadeVenta;
+    }
+
+    public static FacadeProveedor getInstanceFacadeProveedor() {
+        if (facadeProveedor == null) {
+            facadeProveedor = new FacadeProveedor();
+        }
+        return facadeProveedor;
     }
 }
