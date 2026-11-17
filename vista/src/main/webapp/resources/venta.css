@@ -1,0 +1,231 @@
+/* =========================================
+   Pantalla de Registrar Venta
+   ========================================= */
+
+.venta-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.venta-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.venta-sidebar {
+    width: 320px;
+    flex-shrink: 0;
+}
+
+/* Barra de búsqueda superior */
+.venta-barra {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.venta-barra .buscador {
+    flex: 2;
+}
+
+.venta-barra .buscador .ui-autocomplete,
+.venta-barra .buscador input {
+    width: 100%;
+}
+
+.venta-barra .cliente {
+    flex: 1;
+}
+
+.venta-barra .cliente .ui-selectonemenu {
+    width: 100%;
+}
+
+/* Tabla de detalles */
+.tabla-venta .ui-datatable-tablewrapper {
+    overflow-x: hidden;
+}
+
+.tabla-venta thead th,
+.tabla-venta tbody td {
+    padding: 8px;
+    font-size: 13px;
+}
+
+.tabla-venta .col-acciones {
+    width: 50px;
+    text-align: center;
+}
+
+/* Panel lateral de resumen */
+.resumen-venta {
+    background: #ffffff;
+    border: 1px solid #E0E4E8;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+}
+
+.resumen-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.resumen-header small {
+    color: var(--texto-sec, #666);
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.resumen-header span {
+    font-weight: bold;
+    font-size: 14px;
+    color: var(--texto-principal, #333);
+}
+
+.resumen-total-label {
+    color: var(--texto-sec, #666);
+    font-size: 13px;
+    margin-top: 15px;
+    display: block;
+}
+
+.resumen-total {
+    font-size: 2.8rem;
+    color: var(--primario-oscuro, #0E7C86);
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 20px;
+}
+
+/* Botones del panel lateral */
+.btn-cobrar {
+    width: 100%;
+    padding: 12px !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
+    background-color: #2E7D32 !important;
+    border: none !important;
+}
+
+.btn-cancelar {
+    width: 100%;
+    padding: 10px !important;
+    margin-top: 10px;
+    background-color: transparent !important;
+    color: #D32F2F !important;
+    border: 1px solid #D32F2F !important;
+}
+
+.btn-cancelar:hover {
+    background-color: #FFEBEE !important;
+}
+
+/* =========================================
+   Modal de Cobro (diálogo)
+   ========================================= */
+
+.dialogo-cobro .ui-dialog-content {
+    padding: 0;
+}
+
+.cobro-header {
+    text-align: center;
+    padding: 20px 20px 0 20px;
+}
+
+.cobro-header small {
+    color: var(--texto-sec, #666);
+    font-size: 13px;
+}
+
+.cobro-total {
+    text-align: center;
+    font-size: 3rem;
+    font-weight: 900;
+    color: var(--primario-oscuro, #0E7C86);
+    margin-bottom: 20px;
+}
+
+.cobro-forma-pago {
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 15px;
+    padding: 0 20px;
+}
+
+.pago-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    margin-bottom: 12px;
+}
+
+.pago-row label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--texto-principal, #333);
+    flex: 1;
+}
+
+.pago-row .ui-inputnumber {
+    flex: 1;
+}
+
+.pago-row .ui-inputnumber input {
+    width: 100%;
+    text-align: right;
+}
+
+.comision-nota {
+    text-align: right;
+    padding: 0 20px;
+    font-size: 12px;
+    color: var(--texto-sec, #666);
+    margin-top: -5px;
+    margin-bottom: 15px;
+}
+
+.resumen-pagos {
+    background: #F8F9FA;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 20px;
+    margin: 0 20px 15px 20px;
+}
+
+.resumen-pagos div {
+    text-align: center;
+}
+
+.resumen-pagos span {
+    display: block;
+    font-size: 12px;
+    color: var(--texto-sec, #666);
+    margin-bottom: 4px;
+}
+
+.resumen-pagos strong {
+    font-size: 16px;
+    color: var(--texto-principal, #333);
+}
+
+.pago-completo {
+    color: #2E7D32;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.dialogo-footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 20px;
+    border-top: 1px solid #E0E4E8;
+    background: #F8F9FA;
+}

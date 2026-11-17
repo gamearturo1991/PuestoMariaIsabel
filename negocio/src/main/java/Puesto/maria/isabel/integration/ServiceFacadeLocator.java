@@ -7,6 +7,7 @@ import Puesto.maria.isabel.facade.FacadeMerma;
 import Puesto.maria.isabel.facade.FacadeProducto;
 import Puesto.maria.isabel.facade.FacadeUsuario;
 import puesto.maria.entity.Usuario;
+import Puesto.maria.isabel.facade.FacadeVenta;
 
 public class ServiceFacadeLocator {
 
@@ -16,7 +17,7 @@ public class ServiceFacadeLocator {
     private static FacadeInventario facadeInventario;
     private static FacadeCategoria facadeCategoria;
     private static FacadeMerma facadeMerma;
-
+    private static FacadeVenta facadeVenta;
 
     public static FacadeUsuario getInstanceFacadeUsuario() {
         if (facadeUsuario == null) {
@@ -60,5 +61,12 @@ public class ServiceFacadeLocator {
             facadeMerma = new FacadeMerma();
         }
         return facadeMerma;
+    }
+
+    public static FacadeVenta getInstanceFacadeVenta() {
+        if (facadeVenta == null) {
+            facadeVenta = new FacadeVenta();
+        }
+        return facadeVenta;
     }
 }
