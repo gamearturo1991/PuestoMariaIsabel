@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 
@@ -37,14 +39,16 @@ public class Bitacora {
     @Column(name = "id_registro")
     private Integer idRegistro;
 
-    @Column(name = "valor_anterior", columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
+    @Column(name = "valor_anterior")
     private String valorAnterior;
 
-    @Lob
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
     @Column(name = "valor_nuevo")
     private String valorNuevo;
 
-    @Column(name = "motivo", columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
+    @Column(name = "motivo")
     private String motivo;
 
     public Integer getId() {

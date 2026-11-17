@@ -165,23 +165,26 @@
                 <div class="resumen-pagos">
                     <div>
                         <span>Pagado</span>
-                        <strong>#{ventaUI.efectivo + ventaUI.transferencia + ventaUI.tarjeta}</strong>
+                        <strong><h:outputText value="#{ventaUI.pagado}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></strong>
                     </div>
                     <div>
                         <span>Falta</span>
-                        <strong>#{ventaUI.total - (ventaUI.efectivo + ventaUI.transferencia + ventaUI.tarjeta)}</strong>
+                        <strong><h:outputText value="#{ventaUI.falta}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></strong>
                     </div>
                     <div>
                         <span>Cambio</span>
-                        <strong>#{ventaUI.cambio}</strong>
+                        <strong><h:outputText value="#{ventaUI.cambio}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></strong>
                     </div>
                 </div>
 
                 <div style="padding: 0 20px 15px 20px; display: flex; justify-content: space-between; align-items: center;">
-                    <p:selectBooleanCheckbox value="#{ventaUI.generarPdf}" itemLabel="Generar ticket en PDF" />
-                    <span class="pago-completo" rendered="#{ventaUI.pagoCompleto}">
-                        <i class="pi pi-check-circle" /> Paga completa
-                    </span>
+                    <p:selectBooleanCheckbox value="#{ventaUI.mostrarTicket}" itemLabel="Mostrar ticket al terminar" />
+                    <h:panelGroup rendered="#{ventaUI.pagoCompleto}">
+                        <span class="pago-completo"><i class="pi pi-check-circle" /> Paga completa</span>
+                    </h:panelGroup>
+                    <h:panelGroup rendered="#{ventaUI.excedeEfectivo}">
+                        <span class="pago-completo" style="color:#b3261e;">El cambio solo se da del efectivo</span>
+                    </h:panelGroup>
                 </div>
 
                 <div class="dialogo-footer">
@@ -189,7 +192,48 @@
                     <p:commandButton value="Confirmar venta" icon="pi pi-check" styleClass="ui-button-success"
                                      actionListener="#{ventaUI.confirmarVenta}"
                                      disabled="#{!ventaUI.pagoCompleto}"
-                                     update=":formVenta :formResumen :formCobro :growl" />
+                                     update=":formVenta :formResumen :formCobro :growl :formTicket" />
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <p:dialog id="dlgTicket" widgetVar="dlgTicket" header="Ticket de venta" modal="true"
+                  resizable="false" draggable="false" width="360">
+            <h:form id="formTicket">
+                <h:panelGroup id="ticketImprimible" layout="block" rendered="#{ventaUI.ticket != null}"
+                              style="font-family: monospace; font-size: 13px; padding: 4px 8px;">
+                    <div style="text-align:center; font-weight:bold; font-size:15px;">Refresquería María Isabel</div>
+                    <div style="text-align:center;">Ticket de venta</div>
+                    <hr/>
+                    <div>Folio: #{ventaUI.ticket.folio}</div>
+                    <div>Fecha: #{ventaUI.ticket.fecha}</div>
+                    <div>Atendió: #{ventaUI.ticket.cajero}</div>
+                    <div>Cliente: #{ventaUI.ticket.cliente}</div>
+                    <hr/>
+                    <ui:repeat value="#{ventaUI.ticket.lineas}" var="l">
+                        <div>#{l[0]} x #{l[1]}</div>
+                        <div style="text-align:right;">#{l[2]} c/u &#160;&#160; #{l[3]}</div>
+                    </ui:repeat>
+                    <hr/>
+                    <div style="display:flex; justify-content:space-between; font-weight:bold;">
+                        <span>TOTAL (#{ventaUI.ticket.articulos} art.)</span><span>#{ventaUI.ticket.total}</span>
+                    </div>
+                    <ui:repeat value="#{ventaUI.ticket.pagos}" var="pg">
+                        <div style="display:flex; justify-content:space-between;">
+                            <span>#{pg[0]}</span><span>#{pg[1]}</span>
+                        </div>
+                    </ui:repeat>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span>Cambio</span><span>#{ventaUI.ticket.cambio}</span>
+                    </div>
+                    <hr/>
+                    <div style="text-align:center;">¡Gracias por su compra!</div>
+                </h:panelGroup>
+                <div class="dialogo-footer">
+                    <p:commandButton value="Imprimir" icon="pi pi-print" type="button">
+                        <p:printer target="ticketImprimible" />
+                    </p:commandButton>
+                    <p:commandButton value="Cerrar" type="button" styleClass="ui-button-flat" onclick="PF('dlgTicket').hide()" />
                 </div>
             </h:form>
         </p:dialog>

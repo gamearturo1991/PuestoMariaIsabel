@@ -1,6 +1,7 @@
 package puesto.maria.persistence.dao;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import puesto.maria.entity.*;
 import puesto.maria.persistence.persistence.AbstractDAO;
 
@@ -41,7 +42,13 @@ public class VentaDAO extends AbstractDAO<Venta> {
                                 "SELECT l FROM Lote l WHERE l.idProducto.id = :id AND l.cantidadDisponible > 0 " +
                                         "ORDER BY l.idEntrada.fechaHora ASC, l.id ASC", Lote.class)
                         .setParameter("id", detalle.getIdProducto().getId())
+                        .setLockMode(LockModeType.PESSIMISTIC_WRITE)
                         .getResultList();
+                // El EntityManager es compartido con entradas y mermas: se recarga cada lote para no
+                // trabajar con una cantidad vieja y pisar el descuento de otra operacion.
+                for (Lote lote : lotes) {
+                    em.refresh(lote);
+                }
 
                 int restante = detalle.getCantidad();
                 for (Lote lote : lotes) {
