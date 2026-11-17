@@ -22,7 +22,10 @@ public class ServiceLocator {
     private static ProveedorDAO proveedorDAO;
     private static ProductoDAO productoDAO;
     private static EntradaInventarioDAO entradaInventarioDAO;
-    private static LoteDAO loteDAO;
+    private static MermaDAO mermaDAO;
+    private static VentaDAO ventaDAO;
+    private static ClienteDAO clienteDAO;
+
     private static EntityManager getEntityManager(){
         return HibernateUtil.getEntityManager();
     }
@@ -81,27 +84,38 @@ public class ServiceLocator {
         return entradaInventarioDAO;
     }
 
-
-    public static LoteDAO getInstanceLoteDAO() {
-        if (loteDAO == null) {
-            loteDAO = new LoteDAO(HibernateUtil.getEntityManager());
+    /**
+     * se crea la instancia de mermaDAO si esta no existe.
+     * Usa el mismo EntityManager que productoDAO para que los lotes que descuenta una merma sean los mismos
+     * objetos que usan las entradas y la existencia.
+     */
+    public static MermaDAO getInstanceMermaDAO(){
+        if(mermaDAO == null){
+            mermaDAO = new MermaDAO(getInstanceProductoDAO().getEntityManager());
         }
-        return loteDAO;
+        return mermaDAO;
     }
 
-    private static VentaDAO ventaDAO;
-    public static VentaDAO getInstanceVentaDAO() {
-        if (ventaDAO == null) {
-            ventaDAO = new VentaDAO(getEntityManager());
+    /**
+     * se crea la instancia de ventaDAO si esta no existe.
+     * Usa el mismo EntityManager que productoDAO: la venta descuenta de los mismos lotes que usan las entradas
+     * y las mermas, asi todos ven la misma existencia y no se pisan los cambios.
+     */
+    public static VentaDAO getInstanceVentaDAO(){
+        if(ventaDAO == null){
+            ventaDAO = new VentaDAO(getInstanceProductoDAO().getEntityManager());
         }
         return ventaDAO;
     }
 
-    private static ClienteDAO clienteDAO;
-    public static ClienteDAO getInstanceClienteDAO() {
-        if (clienteDAO == null) {
+    /**
+     * se crea la instancia de clienteDAO si esta no existe
+     */
+    public static ClienteDAO getInstanceClienteDAO(){
+        if(clienteDAO == null){
             clienteDAO = new ClienteDAO(getEntityManager());
         }
         return clienteDAO;
     }
+
 }
