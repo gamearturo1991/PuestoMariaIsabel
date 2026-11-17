@@ -3,8 +3,8 @@ package puesto.maria.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -27,10 +27,13 @@ public class Merma {
     @JoinColumn(name = "id_usuario", nullable = false)
     private Usuario idUsuario;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @OnDelete(action = OnDeleteAction.SET_NULL)
-    @JoinColumn(name = "id_devolucion")
-    private Devolucion idDevolucion;
+    /**
+     * Id de la devolución que originó la merma (si la hubo). Es una columna simple, sin relación con
+     * Devolucion, para que la unidad de persistencia no tenga que cargar toda la cadena de ventas.
+     * Cuando se programen las devoluciones se puede volver a mapear como relación.
+     */
+    @Column(name = "id_devolucion")
+    private Integer idDevolucion;
 
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "fecha_hora")
@@ -40,7 +43,7 @@ public class Merma {
     @Column(name = "cantidad", nullable = false)
     private Integer cantidad;
 
-    @Lob
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
     @Column(name = "motivo")
     private String motivo;
 
@@ -48,7 +51,7 @@ public class Merma {
     @Column(name = "costo_unitario", nullable = false, precision = 12, scale = 2)
     private BigDecimal costoUnitario;
 
-    @Lob
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
     @Column(name = "observaciones")
     private String observaciones;
 
@@ -76,11 +79,11 @@ public class Merma {
         this.idUsuario = idUsuario;
     }
 
-    public Devolucion getIdDevolucion() {
+    public Integer getIdDevolucion() {
         return idDevolucion;
     }
 
-    public void setIdDevolucion(Devolucion idDevolucion) {
+    public void setIdDevolucion(Integer idDevolucion) {
         this.idDevolucion = idDevolucion;
     }
 

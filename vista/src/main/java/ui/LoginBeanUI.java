@@ -41,7 +41,7 @@ public class LoginBeanUI implements Serializable {
             usuario = us;
 
 
-            return "/index.xhtml?faces-redirect=true";
+            return "/venta.xhtml?faces-redirect=true";
 
         } else {
             FacesContext.getCurrentInstance().addMessage(null,

@@ -1,0 +1,307 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html>
+<ui:composition template="/WEB-INF/templates/layout.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui">
+
+    <ui:define name="titulo">Mermas</ui:define>
+
+    <ui:define name="head">
+        <h:outputStylesheet name="productos.css" />
+        <h:outputStylesheet name="entradas.css" />
+        <h:outputStylesheet name="mermas.css" />
+    </ui:define>
+
+    <ui:define name="contenido">
+
+        <p:growl id="growl" showDetail="true" life="7000" />
+
+        <h:form id="formMermas">
+            <p:panel header="Mermas" styleClass="panel-merma">
+
+                <!-- ===== ¿Registrar o consultar? ===== -->
+                <div class="selector-modo">
+                    <p:selectOneButton id="modo" value="#{mermaUI.modo}">
+                        <f:selectItem itemLabel="Registrar merma" itemValue="REGISTRAR" />
+                        <f:selectItem itemLabel="Historial de mermas" itemValue="HISTORIAL" />
+                        <p:ajax listener="#{mermaUI.cambiarModo}" update="formMermas" />
+                    </p:selectOneButton>
+                </div>
+
+                <!-- ===== Registrar una merma ===== -->
+                <h:panelGroup id="panelRegistrar" layout="block" rendered="#{!mermaUI.modoHistorial}">
+
+                    <div class="form-grid">
+                        <p:outputLabel for="producto" value="Producto" />
+                        <p:autoComplete id="producto" value="#{mermaUI.productoSeleccionado}"
+                                        completeMethod="#{mermaUI.completarProducto}"
+                                        var="pr" itemLabel="#{pr.codigoCorto} · #{pr.nombre}#{pr.activo ? '' : ' (deshabilitado)'}"
+                                        itemValue="#{pr}" forceSelection="true"
+                                        minQueryLength="1" maxResults="20" scrollHeight="220" queryDelay="200"
+                                        placeholder="Código o nombre del producto" emptyMessage="Sin resultados">
+                            <p:ajax event="itemSelect" listener="#{mermaUI.onProductoSeleccionado}"
+                                    update="datosProducto cantidad" />
+                            <p:ajax event="clear" listener="#{mermaUI.onProductoSeleccionado}"
+                                    update="datosProducto cantidad" />
+                        </p:autoComplete>
+                    </div>
+
+                    <h:panelGroup id="datosProducto" layout="block">
+                        <h:panelGroup layout="block" styleClass="info-producto"
+                                      rendered="#{mermaUI.productoSeleccionado != null}">
+                            <span>Existencia actual: <b>#{mermaUI.existenciaActual}</b></span>
+                            <span>Costo actual:
+                                <b><h:outputText value="#{mermaUI.productoSeleccionado.costo}">
+                                    <f:convertNumber pattern="$#,##0.00" />
+                                </h:outputText></b></span>
+                            <span>Pérdida estimada:
+                                <b><h:outputText value="#{mermaUI.perdidaEstimada}">
+                                    <f:convertNumber pattern="$#,##0.00" />
+                                </h:outputText></b></span>
+                        </h:panelGroup>
+                    </h:panelGroup>
+
+                    <div class="form-grid">
+                        <p:outputLabel for="cantidad" value="Piezas a mermar" />
+                        <p:inputNumber id="cantidad" value="#{mermaUI.cantidad}"
+                                       decimalPlaces="0" minValue="0">
+                            <p:ajax event="change" listener="#{mermaUI.onCantidadCambiada}"
+                                    update="datosProducto" />
+                        </p:inputNumber>
+
+                        <p:outputLabel for="motivo" value="Motivo" />
+                        <p:selectOneMenu id="motivo" value="#{mermaUI.motivo}">
+                            <f:selectItem itemLabel="Selecciona…" itemValue="#{null}" noSelectionOption="true" />
+                            <f:selectItems value="#{mermaUI.motivos}" />
+                        </p:selectOneMenu>
+                    </div>
+
+                    <div class="form-grid obs">
+                        <p:outputLabel for="observaciones" value="Observaciones" />
+                        <p:inputTextarea id="observaciones" value="#{mermaUI.observaciones}"
+                                         rows="2" autoResize="false" />
+                    </div>
+
+                    <div class="nota">
+                        Solo se descuentan las piezas que indiques (no un lote completo), de las entradas más antiguas.
+                        La pérdida se calcula con el costo con el que entró cada pieza. Antes de registrar se te pedirá confirmar.
+                    </div>
+
+                    <div class="dialogo-botones">
+                        <p:commandButton value="Limpiar" styleClass="ui-button-flat"
+                                         actionListener="#{mermaUI.limpiar}"
+                                         process="@this" update="formMermas" />
+                        <p:commandButton value="Registrar merma" icon="pi pi-check"
+                                         actionListener="#{mermaUI.pedirConfirmacion}"
+                                         process="@form" update=":growl :formConfirmarMerma" />
+                    </div>
+                </h:panelGroup>
+
+                <!-- ===== Historial de mermas ===== -->
+                <h:panelGroup id="panelHistorial" layout="block" rendered="#{mermaUI.modoHistorial}">
+
+                    <div class="form-grid filtros-merma">
+                        <p:outputLabel for="filtroMotivo" value="Motivo" />
+                        <p:selectOneMenu id="filtroMotivo" value="#{mermaUI.filtroMotivo}">
+                            <f:selectItem itemLabel="Todos los motivos" itemValue="#{null}" noSelectionOption="true" />
+                            <f:selectItems value="#{mermaUI.motivos}" />
+                        </p:selectOneMenu>
+
+                        <p:outputLabel for="desde" value="Desde" />
+                        <p:datePicker id="desde" value="#{mermaUI.desde}" pattern="dd/MM/yyyy"
+                                      showIcon="true" />
+
+                        <p:outputLabel for="hasta" value="Hasta" />
+                        <p:datePicker id="hasta" value="#{mermaUI.hasta}" pattern="dd/MM/yyyy"
+                                      showIcon="true" />
+                    </div>
+
+                    <div class="dialogo-botones botones-filtro">
+                        <p:commandButton value="Mes actual" styleClass="ui-button-flat"
+                                         actionListener="#{mermaUI.limpiarFiltros}"
+                                         process="@this" update="formMermas :growl" />
+                        <p:commandButton value="Consultar" icon="pi pi-search"
+                                         actionListener="#{mermaUI.consultar}"
+                                         process="@form" update="formMermas :growl" />
+                    </div>
+
+                    <!-- Totales del periodo -->
+                    <div class="resumen-merma">
+                        <div class="tarjeta-merma">
+                            <span class="n">#{mermaUI.piezasTotal}</span>
+                            <span class="t">piezas perdidas</span>
+                        </div>
+                        <div class="tarjeta-merma">
+                            <span class="n"><h:outputText value="#{mermaUI.perdidaTotal}">
+                                <f:convertNumber pattern="$#,##0.00" />
+                            </h:outputText></span>
+                            <span class="t">pérdida del periodo</span>
+                        </div>
+                        <p:dataTable id="tablaTotales" value="#{mermaUI.totales}" var="t"
+                                     styleClass="tabla-totales"
+                                     emptyMessage="Sin mermas en el periodo">
+                            <p:column headerText="Motivo">
+                                <h:outputText value="#{t.motivo}" />
+                            </p:column>
+                            <p:column headerText="Piezas" styleClass="num">
+                                <h:outputText value="#{t.piezas}" />
+                            </p:column>
+                            <p:column headerText="Pérdida" styleClass="num">
+                                <h:outputText value="#{t.perdida}">
+                                    <f:convertNumber pattern="$#,##0.00" />
+                                </h:outputText>
+                            </p:column>
+                        </p:dataTable>
+                    </div>
+
+                    <p:dataTable id="tablaHistorial" value="#{mermaUI.registros}" var="r" rowKey="#{r.ids[0]}"
+                                 styleClass="tabla-merma"
+                                 rowStyleClass="#{r.totalmenteAnulada ? 'fila-anulada' : ''}"
+                                 scrollable="true" scrollHeight="420"
+                                 tableStyle="table-layout:auto;width:100%"
+                                 emptyMessage="No hay mermas con esos filtros">
+
+                        <p:column width="36">
+                            <p:rowToggler rendered="#{r.conAnulaciones or not empty r.observaciones}" />
+                        </p:column>
+                        <p:column headerText="Fecha" width="130">
+                            <h:outputText value="#{r.fecha}" />
+                        </p:column>
+                        <p:column headerText="Producto">
+                            <h:outputText value="#{r.producto.nombre}" />
+                            <br />
+                            <h:outputText value="#{r.producto.codigoCorto}" styleClass="codigo" />
+                        </p:column>
+                        <p:column headerText="Motivo">
+                            <h:outputText value="#{r.motivo}" />
+                        </p:column>
+                        <p:column headerText="Mermadas" styleClass="num" width="80">
+                            <h:outputText value="#{r.piezas}" />
+                        </p:column>
+                        <p:column headerText="Rescatadas" styleClass="num" width="90">
+                            <h:outputText value="#{r.rescatadas}" />
+                        </p:column>
+                        <p:column headerText="Pérdida neta" styleClass="num" width="110">
+                            <h:outputText value="#{r.perdidaNeta}">
+                                <f:convertNumber pattern="$#,##0.00" />
+                            </h:outputText>
+                        </p:column>
+                        <p:column headerText="Usuario" width="130">
+                            <h:outputText value="#{r.usuario}" />
+                        </p:column>
+                        <p:column headerText="" width="60">
+                            <p:commandButton icon="pi pi-undo" title="Anular (rescatar piezas)"
+                                             styleClass="ui-button-flat ui-button-warning"
+                                             disabled="#{r.totalmenteAnulada}"
+                                             actionListener="#{mermaUI.abrirAnulacion(r)}"
+                                             process="@this" update=":formAnular"
+                                             oncomplete="PF('dlgAnular').show()" />
+                        </p:column>
+
+                        <p:rowExpansion>
+                            <div class="detalle-merma">
+                                <h:panelGroup rendered="#{not empty r.observaciones}">
+                                    <b>Observaciones:</b> #{r.observaciones}
+                                </h:panelGroup>
+                                <h:panelGroup rendered="#{r.conAnulaciones}">
+                                    <div><b>Anulaciones:</b></div>
+                                    <ui:repeat value="#{r.anulaciones}" var="a">
+                                        <div class="linea-anulacion">
+                                            #{a.fecha} · #{a.piezas} pieza(s) rescatadas por #{a.usuario}:
+                                            #{a.descripcion}
+                                        </div>
+                                    </ui:repeat>
+                                </h:panelGroup>
+                            </div>
+                        </p:rowExpansion>
+                    </p:dataTable>
+
+                    <div class="nota">
+                        La pérdida neta es lo mermado menos lo rescatado, a su costo. Una merma anulada no se borra:
+                        queda en el historial con su descripción.
+                    </div>
+                </h:panelGroup>
+
+            </p:panel>
+        </h:form>
+
+        <!-- ===== Confirmar merma ===== -->
+        <p:dialog widgetVar="dlgConfirmarMerma" header="Confirmar merma" modal="true" resizable="false"
+                  draggable="false" width="460" styleClass="dialogo-merma">
+            <h:form id="formConfirmarMerma">
+                <h:panelGroup layout="block" styleClass="texto-confirmar">
+                    <p>#{mermaUI.mensajeConfirmacion}</p>
+                    <p>Pérdida estimada:
+                        <b><h:outputText value="#{mermaUI.perdidaEstimada}">
+                            <f:convertNumber pattern="$#,##0.00" />
+                        </h:outputText></b></p>
+                </h:panelGroup>
+                <div class="dialogo-botones">
+                    <p:commandButton value="Cancelar" styleClass="ui-button-flat" type="button"
+                                     onclick="PF('dlgConfirmarMerma').hide()" />
+                    <p:commandButton value="Sí, mermar" icon="pi pi-check"
+                                     actionListener="#{mermaUI.registrar}"
+                                     process="@this" update=":growl :formMermas" />
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <!-- ===== Anular merma: captura ===== -->
+        <p:dialog widgetVar="dlgAnular" header="Anular merma" modal="true" resizable="false"
+                  draggable="false" width="480" styleClass="dialogo-merma">
+            <h:form id="formAnular">
+                <h:panelGroup layout="block" rendered="#{mermaUI.registroAnulacion != null}">
+                    <div class="info-producto">
+                        <span><b>#{mermaUI.registroAnulacion.producto.nombre}</b></span>
+                        <span>Motivo: <b>#{mermaUI.registroAnulacion.motivo}</b></span>
+                        <span>Mermadas: <b>#{mermaUI.registroAnulacion.piezas}</b></span>
+                        <span>Ya rescatadas: <b>#{mermaUI.registroAnulacion.rescatadas}</b></span>
+                        <span>Por rescatar: <b>#{mermaUI.registroAnulacion.pendientes}</b></span>
+                    </div>
+
+                    <div class="form-grid">
+                        <p:outputLabel for="cantidadAnular" value="Piezas a rescatar" />
+                        <p:inputNumber id="cantidadAnular" value="#{mermaUI.cantidadAnular}"
+                                       decimalPlaces="0" minValue="0"
+                                       maxValue="#{mermaUI.registroAnulacion.pendientes}" />
+
+                        <p:outputLabel for="descripcionAnular" value="¿Qué error hubo?" />
+                        <p:inputTextarea id="descripcionAnular" value="#{mermaUI.descripcionAnulacion}"
+                                         rows="3" autoResize="false"
+                                         placeholder="Describe el error o por qué se mermó por accidente" />
+                    </div>
+                </h:panelGroup>
+                <div class="dialogo-botones">
+                    <p:commandButton value="Cancelar" styleClass="ui-button-flat" type="button"
+                                     onclick="PF('dlgAnular').hide()" />
+                    <p:commandButton value="Continuar" icon="pi pi-arrow-right"
+                                     actionListener="#{mermaUI.continuarAnulacion}"
+                                     process="@form" update=":growl :formConfirmarAnular" />
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <!-- ===== Anular merma: confirmación ===== -->
+        <p:dialog widgetVar="dlgConfirmarAnular" header="Confirmar anulación" modal="true" resizable="false"
+                  draggable="false" width="480" styleClass="dialogo-merma">
+            <h:form id="formConfirmarAnular">
+                <h:panelGroup layout="block" styleClass="texto-confirmar">
+                    <p>#{mermaUI.mensajeConfirmacionAnulacion}</p>
+                    <p>Error indicado: <i>#{mermaUI.descripcionAnulacion}</i></p>
+                </h:panelGroup>
+                <div class="dialogo-botones">
+                    <p:commandButton value="Volver" styleClass="ui-button-flat" type="button"
+                                     onclick="PF('dlgConfirmarAnular').hide();PF('dlgAnular').show()" />
+                    <p:commandButton value="Sí, rescatar piezas" icon="pi pi-undo"
+                                     actionListener="#{mermaUI.anular}"
+                                     process="@this" update=":growl :formMermas" />
+                </div>
+            </h:form>
+        </p:dialog>
+
+    </ui:define>
+
+</ui:composition>
