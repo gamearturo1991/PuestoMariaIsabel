@@ -3,6 +3,8 @@ package ui;
 import Puesto.maria.isabel.delegate.RegistroMerma;
 import Puesto.maria.isabel.delegate.ResultadoMerma;
 import Puesto.maria.isabel.delegate.ResumenMotivo;
+import Puesto.maria.isabel.delegate.AccionBitacora;
+import helper.BitacoraHelper;
 import helper.MermaHelper;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.SessionScoped;
@@ -28,6 +30,8 @@ import java.util.List;
 public class MermaBeanUI implements Serializable {
 
     private static final int MAX_SUGERENCIAS = 20;
+
+    private final BitacoraHelper bitacoraHelper = new BitacoraHelper();
 
     @Inject
     private LoginBeanUI loginUI;
@@ -118,6 +122,10 @@ public class MermaBeanUI implements Serializable {
             ResultadoMerma r = helper.registrar(productoSeleccionado == null ? null : productoSeleccionado.getId(),
                     cantidad, motivo, observaciones, idUsuario());
             PrimeFaces.current().executeScript("PF('dlgConfirmarMerma').hide()");
+            bitacoraHelper.registrar(loginUI.getUsuario(), AccionBitacora.MERMA, "merma", null, null,
+                    BitacoraHelper.texto(BitacoraHelper.campos("producto", r.getProducto().getNombre(),
+                            "piezas", r.getPiezas(), "perdida", r.getPerdida(),
+                            "existencia", r.getExistenciaRestante())), motivo);
             mensaje(FacesMessage.SEVERITY_INFO, "Merma registrada",
                     r.getPiezas() + " pieza(s) de " + r.getProducto().getNombre() + ". Pérdida: "
                             + dinero(r.getPerdida()) + ". Existencia actual: " + r.getExistenciaRestante() + " pzas.");
@@ -234,7 +242,12 @@ public class MermaBeanUI implements Serializable {
     public void anular() {
         try {
             String producto = registroAnulacion == null ? "" : registroAnulacion.getProducto().getNombre();
+            Integer idMerma = registroAnulacion == null || registroAnulacion.getIds().isEmpty()
+                    ? null : registroAnulacion.getIds().get(0);
             helper.anular(registroAnulacion, cantidadAnular, descripcionAnulacion, idUsuario());
+            bitacoraHelper.registrar(loginUI.getUsuario(), AccionBitacora.ANULAR_MERMA, "merma", idMerma, null,
+                    BitacoraHelper.texto(BitacoraHelper.campos("producto", producto,
+                            "piezas rescatadas", cantidadAnular)), descripcionAnulacion);
             PrimeFaces.current().executeScript("PF('dlgConfirmarAnular').hide()");
             mensaje(FacesMessage.SEVERITY_INFO, "Merma anulada",
                     cantidadAnular + " pieza(s) de " + producto + " regresaron al inventario.");

@@ -25,6 +25,7 @@ public class ServiceLocator {
     private static MermaDAO mermaDAO;
     private static VentaDAO ventaDAO;
     private static ClienteDAO clienteDAO;
+    private static BitacoraDAO bitacoraDAO;
 
     private static EntityManager getEntityManager(){
         return HibernateUtil.getEntityManager();
@@ -116,6 +117,18 @@ public class ServiceLocator {
             clienteDAO = new ClienteDAO(getEntityManager());
         }
         return clienteDAO;
+    }
+
+    /**
+     * se crea la instancia de bitacoraDAO si esta no existe.
+     * Usa su propio EntityManager: registrar un movimiento no debe mezclarse con las transacciones
+     * de inventario ni de ventas.
+     */
+    public static BitacoraDAO getInstanceBitacoraDAO(){
+        if(bitacoraDAO == null){
+            bitacoraDAO = new BitacoraDAO(getEntityManager());
+        }
+        return bitacoraDAO;
     }
 
 }

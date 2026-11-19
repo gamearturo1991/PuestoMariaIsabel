@@ -1,5 +1,6 @@
 package Puesto.maria.isabel.integration;
 
+import Puesto.maria.isabel.facade.FacadeBitacora;
 import Puesto.maria.isabel.facade.FacadeCategoria;
 import Puesto.maria.isabel.facade.FacadeEntradaInventario;
 import Puesto.maria.isabel.facade.FacadeInventario;
@@ -21,6 +22,7 @@ public class ServiceFacadeLocator {
     private static FacadeMerma facadeMerma;
     private static FacadeVenta facadeVenta;
     private static FacadeProveedor facadeProveedor;
+    private static FacadeBitacora facadeBitacora;
 
     public static FacadeUsuario getInstanceFacadeUsuario() {
         if (facadeUsuario == null) {
@@ -78,5 +80,12 @@ public class ServiceFacadeLocator {
             facadeProveedor = new FacadeProveedor();
         }
         return facadeProveedor;
+    }
+
+    public static FacadeBitacora getInstanceFacadeBitacora() {
+        if (facadeBitacora == null) {
+            facadeBitacora = new FacadeBitacora();
+        }
+        return facadeBitacora;
     }
 }

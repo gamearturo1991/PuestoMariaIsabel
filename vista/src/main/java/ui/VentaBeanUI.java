@@ -1,5 +1,7 @@
 package ui;
 
+import Puesto.maria.isabel.delegate.AccionBitacora;
+import helper.BitacoraHelper;
 import helper.VentaHelper;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
@@ -29,6 +31,7 @@ public class VentaBeanUI implements Serializable {
     private LoginBeanUI loginUI;
 
     private final VentaHelper helper = new VentaHelper();
+    private final BitacoraHelper bitacoraHelper = new BitacoraHelper();
 
     private List<DetalleVenta> listaDetalles;
     private BigDecimal total;
@@ -216,6 +219,9 @@ public class VentaBeanUI implements Serializable {
             TicketVenta nuevoTicket = armarTicket(usuarioSesion, pagos, cambio);
 
             helper.registrarVenta(venta, new ArrayList<>(listaDetalles), pagos);
+            bitacoraHelper.registrar(usuarioSesion, AccionBitacora.VENTA, "venta", venta.getId(), null,
+                    BitacoraHelper.texto(BitacoraHelper.campos("folio", folioActual, "total", total,
+                            "articulos", totalArticulos, "pagos", pagos.size())), null);
 
             mensaje(FacesMessage.SEVERITY_INFO, "Venta exitosa", "La venta " + folioActual + " se registró correctamente.");
             boolean abrirTicket = mostrarTicket;

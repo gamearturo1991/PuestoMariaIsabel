@@ -1,10 +1,13 @@
 package ui;
 
+import Puesto.maria.isabel.delegate.AccionBitacora;
+import helper.BitacoraHelper;
 import helper.ProveedorHelper;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.SessionScoped;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
+import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.primefaces.PrimeFaces;
 import puesto.maria.entity.Proveedor;
@@ -21,6 +24,13 @@ import java.util.Map;
 public class ProveedorBeanUI implements Serializable {
 
     private final ProveedorHelper helper = new ProveedorHelper();
+    private final BitacoraHelper bitacoraHelper = new BitacoraHelper();
+
+    @Inject
+    private LoginBeanUI loginUI;
+
+    /** Valores del proveedor al abrir la edición. */
+    private Map<String, Object> antes;
 
     private List<Proveedor> proveedores = new ArrayList<>();
     private Map<Integer, Long> productos = new HashMap<>();
@@ -53,6 +63,7 @@ public class ProveedorBeanUI implements Serializable {
         copia.setTelefono(seleccionado.getTelefono());
         copia.setActivo(seleccionado.getActivo());
         proveedor = copia;
+        antes = camposProveedor(copia);
     }
 
     public void guardar() {
@@ -62,6 +73,13 @@ public class ProveedorBeanUI implements Serializable {
                 helper.guardar(proveedor);
             } else {
                 helper.modificar(proveedor);
+            }
+            if (esNuevo) {
+                bitacoraHelper.registrarAlta(loginUI.getUsuario(), "proveedor", proveedor.getId(),
+                        camposProveedor(proveedor));
+            } else {
+                bitacoraHelper.registrarCambio(loginUI.getUsuario(), "proveedor", proveedor.getId(), antes,
+                        camposProveedor(proveedor));
             }
             mensaje(FacesMessage.SEVERITY_INFO, esNuevo ? "Proveedor registrado" : "Proveedor modificado",
                     proveedor.getNombre());
@@ -78,6 +96,10 @@ public class ProveedorBeanUI implements Serializable {
     public void cambiarEstado(Proveedor seleccionado) {
         try {
             helper.cambiarEstado(seleccionado);
+            boolean activo = Boolean.TRUE.equals(seleccionado.getActivo());
+            bitacoraHelper.registrar(loginUI.getUsuario(),
+                    activo ? AccionBitacora.ACTIVAR : AccionBitacora.DESACTIVAR, "proveedor", seleccionado.getId(),
+                    "activo=" + (activo ? "No" : "Sí"), "activo=" + (activo ? "Sí" : "No"), null);
             mensaje(FacesMessage.SEVERITY_INFO,
                     Boolean.TRUE.equals(seleccionado.getActivo()) ? "Proveedor activado" : "Proveedor desactivado",
                     seleccionado.getNombre());
@@ -90,6 +112,8 @@ public class ProveedorBeanUI implements Serializable {
     public void eliminar(Proveedor seleccionado) {
         try {
             helper.eliminar(seleccionado);
+            bitacoraHelper.registrarBaja(loginUI.getUsuario(), "proveedor", seleccionado.getId(),
+                    camposProveedor(seleccionado));
             mensaje(FacesMessage.SEVERITY_INFO, "Proveedor eliminado", seleccionado.getNombre());
             cargar();
         } catch (IllegalArgumentException ex) {
@@ -103,6 +127,15 @@ public class ProveedorBeanUI implements Serializable {
     public long productosDe(Proveedor p) {
         Long n = p == null ? null : productos.get(p.getId());
         return n == null ? 0 : n;
+    }
+
+    private static Map<String, Object> camposProveedor(Proveedor p) {
+        return BitacoraHelper.campos(
+                "nombre", p.getNombre(),
+                "empresa", p.getEmpresa(),
+                "correo", p.getCorreo(),
+                "telefono", p.getTelefono(),
+                "activo", p.getActivo());
     }
 
     private void mensaje(FacesMessage.Severity severidad, String resumen, String detalle) {

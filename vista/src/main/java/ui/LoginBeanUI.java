@@ -5,6 +5,8 @@
  */
 package ui;
 
+import Puesto.maria.isabel.delegate.AccionBitacora;
+import helper.BitacoraHelper;
 import helper.LoginHelper;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.SessionScoped;
@@ -20,6 +22,7 @@ import java.io.Serializable;
 public class LoginBeanUI implements Serializable {
 
     private LoginHelper loginHelper;
+    private final BitacoraHelper bitacoraHelper = new BitacoraHelper();
     private Usuario usuario;
 
     public LoginBeanUI() {
@@ -39,6 +42,7 @@ public class LoginBeanUI implements Serializable {
         if(us != null && us.getId() != null){
 
             usuario = us;
+            bitacoraHelper.registrar(us, AccionBitacora.INICIO_SESION, "usuario", us.getId(), null, null, null);
 
 
             return "/venta.xhtml?faces-redirect=true";

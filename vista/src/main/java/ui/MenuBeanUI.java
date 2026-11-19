@@ -1,6 +1,8 @@
 package ui;
 
 import Puesto.maria.isabel.delegate.ExistenciaProducto;
+import Puesto.maria.isabel.delegate.AccionBitacora;
+import helper.BitacoraHelper;
 import helper.InventarioHelper;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.SessionScoped;
@@ -29,6 +31,7 @@ public class MenuBeanUI implements Serializable {
     private List<ItemMenu> items;
 
     private final InventarioHelper inventarioHelper = new InventarioHelper();
+    private final BitacoraHelper bitacoraHelper = new BitacoraHelper();
 
     /** Alertas de stock (agotados o con stock bajo), consultadas a lo más cada 10 segundos para no cargar la base. */
     private static final long VIGENCIA_ALERTAS_MS = 10_000;
@@ -53,7 +56,7 @@ public class MenuBeanUI implements Serializable {
         items.add(new ItemMenu("Clientes y facturación", "/clientes.xhtml", false));
         items.add(new ItemMenu("Proveedores", "/proveedores.xhtml", true));
         items.add(new ItemMenu("Reportes y corte", "/reportes.xhtml", false));
-        items.add(new ItemMenu("Bitácora", "/bitacora.xhtml", false));
+        items.add(new ItemMenu("Bitácora", "/bitacora.xhtml", true));
     }
 
     /** Si no hay sesión iniciada, manda al login (se llama en preRenderView). */
@@ -69,6 +72,10 @@ public class MenuBeanUI implements Serializable {
     }
 
     public String cerrarSesion() {
+        if (loginUI != null && loginUI.getUsuario() != null && loginUI.getUsuario().getId() != null) {
+            bitacoraHelper.registrar(loginUI.getUsuario(), AccionBitacora.CIERRE_SESION, "usuario",
+                    loginUI.getUsuario().getId(), null, null, null);
+        }
         FacesContext.getCurrentInstance().getExternalContext().invalidateSession();
         return "/login.xhtml?faces-redirect=true";
     }
