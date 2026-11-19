@@ -1,0 +1,115 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html>
+<ui:composition template="/WEB-INF/templates/layout.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui">
+
+    <ui:define name="titulo">Bitácora</ui:define>
+
+    <ui:define name="head">
+        <h:outputStylesheet name="productos.css" />
+        <h:outputStylesheet name="bitacora.css" />
+    </ui:define>
+
+    <ui:define name="contenido">
+
+        <f:event type="preRenderView" listener="#{bitacoraUI.alAbrir}" />
+
+        <p:growl id="growl" showDetail="true" life="6000" />
+
+        <h:form id="formBitacora">
+            <p:panel header="Bitácora de movimientos" styleClass="panel-bitacora">
+
+                <!-- ===== Filtros ===== -->
+                <div class="form-grid filtros-bitacora">
+                    <p:outputLabel for="desde" value="Desde" />
+                    <p:datePicker id="desde" value="#{bitacoraUI.desde}" pattern="dd/MM/yyyy" showIcon="true" />
+
+                    <p:outputLabel for="hasta" value="Hasta" />
+                    <p:datePicker id="hasta" value="#{bitacoraUI.hasta}" pattern="dd/MM/yyyy" showIcon="true" />
+
+                    <p:outputLabel for="filtroUsuario" value="Usuario" />
+                    <p:selectOneMenu id="filtroUsuario" value="#{bitacoraUI.usuarioId}">
+                        <f:selectItem itemLabel="Todos los usuarios" itemValue="#{null}" noSelectionOption="true" />
+                        <f:selectItems value="#{bitacoraUI.usuarios}" var="u"
+                                       itemValue="#{u.id}" itemLabel="#{u.nombreCompleto}" />
+                    </p:selectOneMenu>
+
+                    <p:outputLabel for="filtroAccion" value="Acción" />
+                    <p:selectOneMenu id="filtroAccion" value="#{bitacoraUI.accion}">
+                        <f:selectItem itemLabel="Todas las acciones" itemValue="#{null}" noSelectionOption="true" />
+                        <f:selectItems value="#{bitacoraUI.acciones}" />
+                    </p:selectOneMenu>
+
+                    <p:outputLabel for="filtroTabla" value="Tabla" />
+                    <p:selectOneMenu id="filtroTabla" value="#{bitacoraUI.tabla}">
+                        <f:selectItem itemLabel="Todas las tablas" itemValue="#{null}" noSelectionOption="true" />
+                        <f:selectItems value="#{bitacoraUI.tablas}" />
+                    </p:selectOneMenu>
+                </div>
+
+                <div class="dialogo-botones botones-filtro">
+                    <p:commandButton value="Últimos 7 días" styleClass="ui-button-flat"
+                                     actionListener="#{bitacoraUI.limpiar}"
+                                     process="@this" update="formBitacora :growl" />
+                    <p:commandButton value="Consultar" icon="pi pi-search"
+                                     actionListener="#{bitacoraUI.consultar}"
+                                     process="@form" update="formBitacora :growl" />
+                </div>
+
+                <div class="resumen-bitacora">
+                    <span class="n">#{bitacoraUI.registros.size()}</span>
+                    <span class="t">movimientos en el periodo</span>
+                </div>
+
+                <!-- ===== Movimientos ===== -->
+                <p:dataTable id="tablaBitacora" value="#{bitacoraUI.registros}" var="r" rowKey="#{r.id}"
+                             styleClass="tabla-bitacora"
+                             paginator="true" rows="20" rowsPerPageTemplate="10,20,50,100"
+                             paginatorPosition="bottom"
+                             tableStyle="table-layout:auto;width:100%"
+                             emptyMessage="No hay movimientos con esos filtros">
+
+                    <p:column width="36">
+                        <p:rowToggler rendered="#{r.tieneDetalle}" />
+                    </p:column>
+                    <p:column headerText="Fecha y hora" width="150">
+                        <h:outputText value="#{r.fecha}" />
+                    </p:column>
+                    <p:column headerText="Usuario">
+                        <h:outputText value="#{r.usuario}" />
+                    </p:column>
+                    <p:column headerText="Acción" width="140">
+                        <h:outputText value="#{r.accion}" styleClass="accion-bitacora" />
+                    </p:column>
+                    <p:column headerText="Tabla" width="150">
+                        <h:outputText value="#{r.tabla}" />
+                    </p:column>
+                    <p:column headerText="Registro" styleClass="num" width="80">
+                        <h:outputText value="#{r.idRegistro}" />
+                    </p:column>
+
+                    <p:rowExpansion>
+                        <div class="detalle-bitacora">
+                            <h:panelGroup rendered="#{not empty r.valorAnterior}">
+                                <div><b>Valor anterior:</b> #{r.valorAnterior}</div>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{not empty r.valorNuevo}">
+                                <div><b>Valor nuevo:</b> #{r.valorNuevo}</div>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{not empty r.motivo}">
+                                <div><b>Motivo:</b> #{r.motivo}</div>
+                            </h:panelGroup>
+                        </div>
+                    </p:rowExpansion>
+                </p:dataTable>
+
+            </p:panel>
+        </h:form>
+
+    </ui:define>
+
+</ui:composition>

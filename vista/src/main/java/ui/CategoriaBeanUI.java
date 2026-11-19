@@ -1,10 +1,13 @@
 package ui;
 
+import Puesto.maria.isabel.delegate.AccionBitacora;
+import helper.BitacoraHelper;
 import helper.CategoriaHelper;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.SessionScoped;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
+import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.primefaces.PrimeFaces;
 import puesto.maria.entity.Categoria;
@@ -21,6 +24,13 @@ import java.util.Map;
 public class CategoriaBeanUI implements Serializable {
 
     private final CategoriaHelper helper = new CategoriaHelper();
+    private final BitacoraHelper bitacoraHelper = new BitacoraHelper();
+
+    @Inject
+    private LoginBeanUI loginUI;
+
+    /** Valores de la categoría al abrir la edición. */
+    private Map<String, Object> antes;
 
     private List<Categoria> categorias = new ArrayList<>();
     private Map<Integer, Long> productos = new HashMap<>();
@@ -48,6 +58,7 @@ public class CategoriaBeanUI implements Serializable {
         copia.setId(seleccionada.getId());
         copia.setNombre(seleccionada.getNombre());
         categoria = copia;
+        antes = BitacoraHelper.campos("nombre", copia.getNombre());
     }
 
     public void guardar() {
@@ -57,6 +68,12 @@ public class CategoriaBeanUI implements Serializable {
                 helper.guardar(categoria);
             } else {
                 helper.modificar(categoria);
+            }
+            Map<String, Object> despues = BitacoraHelper.campos("nombre", categoria.getNombre());
+            if (esNueva) {
+                bitacoraHelper.registrarAlta(loginUI.getUsuario(), "categoria", categoria.getId(), despues);
+            } else {
+                bitacoraHelper.registrarCambio(loginUI.getUsuario(), "categoria", categoria.getId(), antes, despues);
             }
             mensaje(FacesMessage.SEVERITY_INFO, esNueva ? "Categoría registrada" : "Categoría modificada",
                     categoria.getNombre());
@@ -73,6 +90,8 @@ public class CategoriaBeanUI implements Serializable {
     public void eliminar(Categoria seleccionada) {
         try {
             helper.eliminar(seleccionada);
+            bitacoraHelper.registrarBaja(loginUI.getUsuario(), "categoria", seleccionada.getId(),
+                    BitacoraHelper.campos("nombre", seleccionada.getNombre()));
             mensaje(FacesMessage.SEVERITY_INFO, "Categoría eliminada", seleccionada.getNombre());
             cargar();
         } catch (IllegalArgumentException ex) {

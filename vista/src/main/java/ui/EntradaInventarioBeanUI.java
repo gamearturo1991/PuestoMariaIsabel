@@ -1,6 +1,8 @@
 package ui;
 
 import Puesto.maria.isabel.delegate.ResultadoEntrada;
+import Puesto.maria.isabel.delegate.AccionBitacora;
+import helper.BitacoraHelper;
 import helper.EntradaInventarioHelper;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.SessionScoped;
@@ -28,6 +30,8 @@ import java.util.Map;
 public class EntradaInventarioBeanUI implements Serializable {
 
     private static final int MAX_SUGERENCIAS = 20;
+
+    private final BitacoraHelper bitacoraHelper = new BitacoraHelper();
 
     @Inject
     private LoginBeanUI loginUI;
@@ -200,6 +204,13 @@ public class EntradaInventarioBeanUI implements Serializable {
                     sobreMaximo.add(r.getProducto().getNombre());
                 }
             }
+            for (int i = 0; i < resultados.size(); i++) {
+                ResultadoEntrada r = resultados.get(i);
+                bitacoraHelper.registrar(loginUI.getUsuario(), AccionBitacora.ENTRADA, "entrada_inventario", null, null,
+                        BitacoraHelper.texto(BitacoraHelper.campos("producto", r.getProducto().getNombre(),
+                                "piezas", aRecibir.get(i).getCantidad(), "costo", aRecibir.get(i).getCosto(),
+                                "existencia", r.getExistenciaTotal())), observaciones);
+            }
             mensaje(FacesMessage.SEVERITY_INFO, "Recepción registrada",
                     resultados.size() + " producto(s), " + piezas + " pieza(s) recibidas.");
             if (!reactivados.isEmpty()) {
@@ -231,6 +242,10 @@ public class EntradaInventarioBeanUI implements Serializable {
             ResultadoEntrada r = helper.registrar(proveedorId, idProducto, cantidad, costo, precioVenta,
                     idUsuario, observaciones);
 
+            bitacoraHelper.registrar(loginUI.getUsuario(), AccionBitacora.ENTRADA, "entrada_inventario", null, null,
+                    BitacoraHelper.texto(BitacoraHelper.campos("producto", r.getProducto().getNombre(),
+                            "piezas", cantidad, "costo", costo, "existencia", r.getExistenciaTotal())),
+                    observaciones);
             mensaje(FacesMessage.SEVERITY_INFO, "Entrada registrada",
                     r.getProducto().getNombre() + ": existencia " + r.getExistenciaTotal() + " pzas.");
             if (r.isReactivado()) {

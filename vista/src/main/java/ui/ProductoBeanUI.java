@@ -1,10 +1,13 @@
 package ui;
 
+import Puesto.maria.isabel.delegate.AccionBitacora;
+import helper.BitacoraHelper;
 import helper.ProductoHelper;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.SessionScoped;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
+import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.primefaces.PrimeFaces;
 import puesto.maria.entity.Categoria;
@@ -27,6 +30,13 @@ import java.util.Map;
 public class ProductoBeanUI implements Serializable {
 
     private final ProductoHelper helper = new ProductoHelper();
+    private final BitacoraHelper bitacoraHelper = new BitacoraHelper();
+
+    @Inject
+    private LoginBeanUI loginUI;
+
+    /** Valores del producto al abrir la edición, para registrar solo lo que cambió. */
+    private Map<String, Object> antes;
 
     private List<Producto> productos = new ArrayList<>();
     private List<Categoria> categorias = new ArrayList<>();
@@ -102,6 +112,7 @@ public class ProductoBeanUI implements Serializable {
     public void editar(Producto seleccionado) {
         categorias = helper.categorias();
         producto = seleccionado;
+        antes = camposProducto(seleccionado);
         categoriaId = seleccionado.getIdCategoria() == null ? null : seleccionado.getIdCategoria().getId();
         proveedorId = seleccionado.getIdProveedor() == null ? null : seleccionado.getIdProveedor().getId();
     }
@@ -116,6 +127,13 @@ public class ProductoBeanUI implements Serializable {
                 helper.guardar(producto);
             } else {
                 helper.modificar(producto);
+            }
+            if (esNuevo) {
+                bitacoraHelper.registrarAlta(loginUI.getUsuario(), "producto", producto.getId(),
+                        camposProducto(producto));
+            } else {
+                bitacoraHelper.registrarCambio(loginUI.getUsuario(), "producto", producto.getId(), antes,
+                        camposProducto(producto));
             }
             mensaje(FacesMessage.SEVERITY_INFO, esNuevo ? "Producto registrado" : "Producto actualizado",
                     producto.getNombre());
@@ -133,11 +151,26 @@ public class ProductoBeanUI implements Serializable {
     public void deshabilitar(Producto seleccionado) {
         try {
             helper.deshabilitar(seleccionado);
+            bitacoraHelper.registrar(loginUI.getUsuario(), AccionBitacora.DESACTIVAR, "producto",
+                    seleccionado.getId(), "activo=Sí", "activo=No", null);
             mensaje(FacesMessage.SEVERITY_INFO, "Producto deshabilitado", seleccionado.getNombre());
             cargar();
         } catch (RuntimeException ex) {
             mensaje(FacesMessage.SEVERITY_ERROR, "Error al deshabilitar el producto", ex.getMessage());
         }
+    }
+
+    private static Map<String, Object> camposProducto(Producto p) {
+        return BitacoraHelper.campos(
+                "codigo", p.getCodigoCorto(),
+                "nombre", p.getNombre(),
+                "categoria", p.getIdCategoria() == null ? null : p.getIdCategoria().getNombre(),
+                "proveedor", p.getIdProveedor() == null ? null : p.getIdProveedor().getNombre(),
+                "costo", p.getCosto(),
+                "precio", p.getPrecioVenta(),
+                "stockMinimo", p.getStockMinimo(),
+                "stockMaximo", p.getStockMaximo(),
+                "activo", p.getActivo());
     }
 
     private void mensaje(FacesMessage.Severity severidad, String resumen, String detalle) {
