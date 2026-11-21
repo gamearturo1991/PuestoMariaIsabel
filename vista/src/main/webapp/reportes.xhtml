@@ -1,0 +1,422 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html>
+<ui:composition template="/WEB-INF/templates/layout.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui">
+
+    <ui:define name="titulo">Reportes</ui:define>
+
+    <ui:define name="head">
+        <h:outputStylesheet name="productos.css" />
+        <h:outputStylesheet name="reportes.css" />
+    </ui:define>
+
+    <ui:define name="contenido">
+
+        <f:event type="preRenderView" listener="#{reportesUI.alAbrir}" />
+
+        <p:growl id="growl" showDetail="true" life="6000" />
+
+        <h:form id="formReportes">
+
+            <!-- ===== Pestañas ===== -->
+            <p:selectOneButton id="vista" value="#{reportesUI.vista}" unselectable="false" styleClass="vistas-reporte">
+                <f:selectItem itemLabel="Ventas por periodo" itemValue="VENTAS" />
+                <f:selectItem itemLabel="Tickets" itemValue="TICKETS" />
+                <f:selectItem itemLabel="Ingresos y ganancia" itemValue="GANANCIA" />
+                <f:selectItem itemLabel="Estado e inventario" itemValue="INVENTARIO" />
+                <p:ajax listener="#{reportesUI.cambiarVista}" update="formReportes :growl" />
+            </p:selectOneButton>
+
+            <!-- ===== Filtros: ventas e ingresos ===== -->
+            <h:panelGroup layout="block" styleClass="filtros-reporte"
+                          rendered="#{reportesUI.vista ne 'INVENTARIO'}">
+                <p:outputLabel for="tipo" value="Periodo" />
+                <p:selectOneMenu id="tipo" value="#{reportesUI.tipo}">
+                    <f:selectItems value="#{reportesUI.tipos}" var="t" itemValue="#{t}" itemLabel="#{t.etiqueta}" />
+                </p:selectOneMenu>
+
+                <p:outputLabel for="fecha" value="Fecha dentro del periodo" />
+                <p:datePicker id="fecha" value="#{reportesUI.fecha}" pattern="dd/MM/yyyy" showIcon="true"
+                              maxdate="#{reportesUI.fechaMaxima}" />
+            </h:panelGroup>
+
+            <!-- ===== Filtros: inventario ===== -->
+            <h:panelGroup layout="block" styleClass="filtros-reporte"
+                          rendered="#{reportesUI.vista eq 'INVENTARIO'}">
+                <p:outputLabel for="mes" value="Mes" />
+                <p:selectOneMenu id="mes" value="#{reportesUI.mes}">
+                    <f:selectItems value="#{reportesUI.meses}" />
+                </p:selectOneMenu>
+
+                <p:outputLabel for="anio" value="Año" />
+                <p:selectOneMenu id="anio" value="#{reportesUI.anio}">
+                    <f:selectItems value="#{reportesUI.anios}" />
+                </p:selectOneMenu>
+
+                <p:outputLabel for="categoria" value="Categoría" />
+                <p:selectOneMenu id="categoria" value="#{reportesUI.categoriaId}">
+                    <f:selectItem itemLabel="Todas las categorías" itemValue="#{null}" noSelectionOption="true" />
+                    <f:selectItems value="#{reportesUI.categorias}" var="c"
+                                   itemValue="#{c.id}" itemLabel="#{c.nombre}" />
+                </p:selectOneMenu>
+
+                <p:outputLabel for="proveedor" value="Proveedor" />
+                <p:selectOneMenu id="proveedor" value="#{reportesUI.proveedorId}">
+                    <f:selectItem itemLabel="Todos los proveedores" itemValue="#{null}" noSelectionOption="true" />
+                    <f:selectItems value="#{reportesUI.proveedores}" var="v"
+                                   itemValue="#{v.id}" itemLabel="#{v.nombre}" />
+                </p:selectOneMenu>
+            </h:panelGroup>
+
+            <!-- ===== Botones ===== -->
+            <div class="botones-reporte">
+                <p:commandButton value="Anterior" icon="pi pi-chevron-left" styleClass="ui-button-flat"
+                                 actionListener="#{reportesUI.desplazar(-1)}"
+                                 process="@form" update="formReportes :growl" />
+                <p:commandButton value="Hoy" styleClass="ui-button-flat"
+                                 actionListener="#{reportesUI.hoy}"
+                                 process="@this" update="formReportes :growl" />
+                <p:commandButton value="Siguiente" icon="pi pi-chevron-right" iconPos="right"
+                                 styleClass="ui-button-flat"
+                                 actionListener="#{reportesUI.desplazar(1)}"
+                                 process="@form" update="formReportes :growl" />
+                <p:commandButton value="Consultar" icon="pi pi-search"
+                                 actionListener="#{reportesUI.consultar}"
+                                 process="@form" update="formReportes :growl" />
+                <span class="espacio" />
+                <p:commandButton value="Imprimir" icon="pi pi-print" type="button" styleClass="ui-button-flat"
+                                 rendered="#{reportesUI.vista eq 'VENTAS'}">
+                    <p:printer target="areaVentas" />
+                </p:commandButton>
+                <p:commandButton value="Imprimir" icon="pi pi-print" type="button" styleClass="ui-button-flat"
+                                 rendered="#{reportesUI.vista eq 'TICKETS'}">
+                    <p:printer target="areaTickets" />
+                </p:commandButton>
+                <p:commandButton value="Imprimir" icon="pi pi-print" type="button" styleClass="ui-button-flat"
+                                 rendered="#{reportesUI.vista eq 'GANANCIA'}">
+                    <p:printer target="areaGanancia" />
+                </p:commandButton>
+                <p:commandButton value="Imprimir" icon="pi pi-print" type="button" styleClass="ui-button-flat"
+                                 rendered="#{reportesUI.vista eq 'INVENTARIO'}">
+                    <p:printer target="areaInventario" />
+                </p:commandButton>
+                <p:commandButton value="Exportar CSV" icon="pi pi-download" ajax="false" styleClass="ui-button-flat"
+                                 rendered="#{reportesUI.vista eq 'TICKETS'}">
+                    <p:fileDownload value="#{reportesUI.csv}" />
+                </p:commandButton>
+            </div>
+
+            <!-- ==================================================================== -->
+            <!--  VENTAS POR PERIODO                                                  -->
+            <!-- ==================================================================== -->
+            <h:panelGroup id="areaVentas" layout="block" styleClass="area-reporte"
+                          rendered="#{reportesUI.vista eq 'VENTAS' and reportesUI.ventas ne null}">
+
+                <h2 class="titulo-reporte">
+                    Ventas · #{reportesUI.ventas.periodo.titulo}
+                    <h:outputText value=" (periodo en curso)" rendered="#{reportesUI.enCurso}" styleClass="en-curso" />
+                </h2>
+
+                <h:panelGroup layout="block" styleClass="nota-reporte" rendered="#{reportesUI.ventas.sinVentas}">
+                    No hay ventas en este periodo.
+                </h:panelGroup>
+
+                <div class="kpis-reporte">
+                    <div class="kpi"><span class="n">#{reportesUI.ventas.numeroVentas}</span><span class="t">ventas</span></div>
+                    <div class="kpi"><span class="n">#{reportesUI.ventas.piezas}</span><span class="t">piezas vendidas</span></div>
+                    <div class="kpi">
+                        <span class="n"><h:outputText value="#{reportesUI.ventas.totalVendido}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></span>
+                        <span class="t">total vendido</span>
+                    </div>
+                    <div class="kpi">
+                        <span class="n"><h:outputText value="#{reportesUI.ventas.ticketPromedio}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></span>
+                        <span class="t">ticket promedio</span>
+                    </div>
+                </div>
+
+                <h:panelGroup layout="block" styleClass="nota-reporte" rendered="#{reportesUI.ventas.ventasNoCompletadas gt 0}">
+                    Hay #{reportesUI.ventas.ventasNoCompletadas} venta(s) no completadas por
+                    <h:outputText value="#{reportesUI.ventas.montoNoCompletadas}"><f:convertNumber pattern="$#,##0.00" /></h:outputText>:
+                    no suman a lo vendido.
+                </h:panelGroup>
+
+                <h3 class="subtitulo-reporte">Por día</h3>
+                <p:dataTable id="tablaDias" value="#{reportesUI.ventas.dias}" var="d" rowKey="#{d.fecha}"
+                             styleClass="tabla-reporte" tableStyle="table-layout:auto;width:100%">
+                    <p:column headerText="Día"><h:outputText value="#{d.etiqueta}" /></p:column>
+                    <p:column headerText="Ventas" styleClass="num"><h:outputText value="#{d.ventas}" /></p:column>
+                    <p:column headerText="Total" styleClass="num">
+                        <h:outputText value="#{d.total}"><f:convertNumber pattern="$#,##0.00" /></h:outputText>
+                    </p:column>
+                </p:dataTable>
+
+                <h3 class="subtitulo-reporte">Por método de pago</h3>
+                <p:dataTable id="tablaMetodos" value="#{reportesUI.ventas.metodos}" var="m"
+                             styleClass="tabla-reporte" tableStyle="table-layout:auto;width:100%"
+                             emptyMessage="Sin pagos en el periodo">
+                    <p:column headerText="Método"><h:outputText value="#{m.metodo}" /></p:column>
+                    <p:column headerText="Monto" styleClass="num">
+                        <h:outputText value="#{m.monto}"><f:convertNumber pattern="$#,##0.00" /></h:outputText>
+                    </p:column>
+                    <p:column headerText="%" styleClass="num">
+                        <h:outputText value="#{m.porcentaje}"><f:convertNumber pattern="0.0" /></h:outputText>
+                    </p:column>
+                </p:dataTable>
+
+                <h3 class="subtitulo-reporte">Por categoría</h3>
+                <p:dataTable id="tablaCategorias" value="#{reportesUI.ventas.categorias}" var="c"
+                             styleClass="tabla-reporte" tableStyle="table-layout:auto;width:100%"
+                             emptyMessage="Sin ventas en el periodo">
+                    <p:column headerText="Categoría"><h:outputText value="#{c.categoria}" /></p:column>
+                    <p:column headerText="Piezas" styleClass="num"><h:outputText value="#{c.piezas}" /></p:column>
+                    <p:column headerText="Total" styleClass="num">
+                        <h:outputText value="#{c.total}"><f:convertNumber pattern="$#,##0.00" /></h:outputText>
+                    </p:column>
+                </p:dataTable>
+
+                <h3 class="subtitulo-reporte">Productos más vendidos</h3>
+                <p:dataTable id="tablaProductos" value="#{reportesUI.ventas.productos}" var="pr"
+                             styleClass="tabla-reporte" tableStyle="table-layout:auto;width:100%"
+                             paginator="true" rows="10" paginatorPosition="bottom"
+                             emptyMessage="Sin ventas en el periodo">
+                    <p:column headerText="Código"><h:outputText value="#{pr.codigo}" /></p:column>
+                    <p:column headerText="Producto"><h:outputText value="#{pr.nombre}" /></p:column>
+                    <p:column headerText="Categoría"><h:outputText value="#{pr.categoria}" /></p:column>
+                    <p:column headerText="Piezas" styleClass="num"><h:outputText value="#{pr.piezas}" /></p:column>
+                    <p:column headerText="Total" styleClass="num">
+                        <h:outputText value="#{pr.total}"><f:convertNumber pattern="$#,##0.00" /></h:outputText>
+                    </p:column>
+                </p:dataTable>
+            </h:panelGroup>
+
+            <!-- ==================================================================== -->
+            <!--  TICKETS DEL PERIODO                                                 -->
+            <!-- ==================================================================== -->
+            <h:panelGroup id="areaTickets" layout="block" styleClass="area-reporte"
+                          rendered="#{reportesUI.vista eq 'TICKETS' and reportesUI.ventas ne null}">
+
+                <h2 class="titulo-reporte">
+                    Tickets · #{reportesUI.ventas.periodo.titulo}
+                    <h:outputText value=" (periodo en curso)" rendered="#{reportesUI.enCurso}" styleClass="en-curso" />
+                </h2>
+                <div class="buscador-tickets">
+                    <p:outputLabel for="busquedaTicket" value="Buscar folio" style="margin-right:12px" />
+                    <p:inputText id="busquedaTicket" value="#{reportesUI.busquedaTicket}" placeholder="Ej. 3 o #000003"
+                                 maxlength="10" autocomplete="off"
+                                 onkeydown="if(event.key==='Enter'){event.preventDefault();return false;}">
+                        <p:ajax event="keyup" delay="300" process="@this" update="listaTickets" />
+                    </p:inputText>
+                    <p:commandButton value="Ver todos" icon="pi pi-times" styleClass="ui-button-flat" style="margin-left:12px"
+                                     actionListener="#{reportesUI.limpiarBusqueda}"
+                                     process="@this" update="busquedaTicket listaTickets" />
+                </div>
+
+                <h:panelGroup id="listaTickets" layout="block">
+                    <div class="nota-reporte nota-suave">
+                        <h:outputText value="#{reportesUI.ticketsFiltrados.size()} de #{reportesUI.ventas.numeroVentas} ticket(s) · " rendered="#{reportesUI.buscandoTicket}" />
+                        <h:outputText value="#{reportesUI.ventas.numeroVentas} ticket(s) completados · " rendered="#{not reportesUI.buscandoTicket}" />
+                        del más reciente al más antiguo.
+                    </div>
+                    <h:panelGroup layout="block" styleClass="nota-reporte" rendered="#{empty reportesUI.ticketsFiltrados}">
+                        No hay ningún ticket con ese folio en este periodo.
+                    </h:panelGroup>
+                    <div class="tickets-reporte">
+                        <ui:repeat value="#{reportesUI.ticketsFiltrados}" var="t">
+                            <div class="ticket">
+                                <div class="ticket-cabecera">
+                                    <span class="ticket-numero">Folio #{t.folio}</span>
+                                    <span class="ticket-fecha">#{t.fecha}</span>
+                                </div>
+                                <table class="ticket-lineas">
+                                    <ui:repeat value="#{t.lineas}" var="l">
+                                        <tr>
+                                            <td class="cant">#{l.cantidad} ×</td>
+                                            <td>#{l.nombre}</td>
+                                            <td class="num"><h:outputText value="#{l.subtotal}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></td>
+                                        </tr>
+                                    </ui:repeat>
+                                </table>
+                                <div class="ticket-pie">
+                                    <span>#{t.piezas} pieza(s)</span>
+                                    <span class="ticket-total"><h:outputText value="#{t.total}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></span>
+                                </div>
+                                <div class="ticket-pagos" style="font-size:12px">
+                                    <div class="ticket-pagos-titulo">
+                                        <h:outputText value="Pago mixto" rendered="#{t.mixto}" />
+                                        <h:outputText value="Pago" rendered="#{not t.mixto}" />
+                                    </div>
+                                    <ui:repeat value="#{t.pagos}" var="pg">
+                                        <div class="ticket-pago">
+                                            <span>#{pg.etiqueta}</span>
+                                            <span><h:outputText value="#{pg.monto}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></span>
+                                        </div>
+                                    </ui:repeat>
+                                </div>
+                            </div>
+                        </ui:repeat>
+                    </div>
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <!-- ==================================================================== -->
+            <!--  INGRESOS Y GANANCIA NETA                                            -->
+            <!-- ==================================================================== -->
+            <h:panelGroup id="areaGanancia" layout="block" styleClass="area-reporte"
+                          rendered="#{reportesUI.vista eq 'GANANCIA' and reportesUI.ganancia ne null}">
+
+                <h2 class="titulo-reporte">
+                    Ingresos y ganancia · #{reportesUI.ganancia.periodo.titulo}
+                    <h:outputText value=" (periodo en curso)" rendered="#{reportesUI.enCurso}" styleClass="en-curso" />
+                </h2>
+
+                <h:panelGroup layout="block" styleClass="nota-reporte" rendered="#{reportesUI.ganancia.sinMovimientos}">
+                    No hay movimientos en este periodo.
+                </h:panelGroup>
+
+                <div class="kpis-reporte">
+                    <div class="kpi">
+                        <span class="n"><h:outputText value="#{reportesUI.ganancia.ingresos}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></span>
+                        <span class="t">ingresos</span>
+                    </div>
+                    <div class="kpi">
+                        <span class="n"><h:outputText value="#{reportesUI.ganancia.gananciaBruta}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></span>
+                        <span class="t">ganancia bruta</span>
+                    </div>
+                    <div class="kpi kpi-principal">
+                        <span class="n"><h:outputText value="#{reportesUI.ganancia.gananciaNeta}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></span>
+                        <span class="t">ganancia neta</span>
+                    </div>
+                    <div class="kpi">
+                        <span class="n">
+                            <h:outputText value="#{reportesUI.ganancia.margen}" rendered="#{reportesUI.ganancia.margen ne null}"><f:convertNumber pattern="0.00" /></h:outputText>
+                            <h:outputText value="—" rendered="#{reportesUI.ganancia.margen eq null}" />
+                            <h:outputText value=" %" rendered="#{reportesUI.ganancia.margen ne null}" />
+                        </span>
+                        <span class="t">margen sobre ingresos</span>
+                    </div>
+                </div>
+
+                <h:panelGroup layout="block" styleClass="nota-reporte" rendered="#{reportesUI.ganancia.ventasNoCompletadas gt 0}">
+                    Hay #{reportesUI.ganancia.ventasNoCompletadas} venta(s) no completadas por
+                    <h:outputText value="#{reportesUI.ganancia.montoNoCompletadas}"><f:convertNumber pattern="$#,##0.00" /></h:outputText>:
+                    no suman a los ingresos.
+                </h:panelGroup>
+
+                <h3 class="subtitulo-reporte">Resumen</h3>
+                <p:dataTable id="tablaResumen" value="#{reportesUI.ganancia.resumen}" var="c"
+                             styleClass="tabla-reporte tabla-resumen" tableStyle="table-layout:auto;width:100%"
+                             rowStyleClass="#{c.concepto eq 'Ganancia neta' or c.concepto eq 'Ganancia bruta' ? 'fila-total' : ''}">
+                    <p:column headerText="Concepto"><h:outputText value="#{c.concepto}" /></p:column>
+                    <p:column headerText="Importe" styleClass="num">
+                        <h:outputText value="#{c.valor}"><f:convertNumber pattern="$#,##0.00" /></h:outputText>
+                    </p:column>
+                </p:dataTable>
+                <div class="nota-reporte nota-suave">
+                    Ganancia neta = ingresos − costo de lo vendido − mermas − comisiones de tarjeta.
+                    Cada pieza vendida cuenta con el costo al que se adquirió: salen primero las más antiguas.
+                </div>
+
+                <h3 class="subtitulo-reporte">Por categoría</h3>
+                <p:dataTable id="tablaGanCategorias" value="#{reportesUI.ganancia.categorias}" var="l"
+                             styleClass="tabla-reporte" tableStyle="table-layout:auto;width:100%"
+                             emptyMessage="Sin ventas en el periodo">
+                    <p:column headerText="Categoría"><h:outputText value="#{l.nombre}" /></p:column>
+                    <p:column headerText="Piezas" styleClass="num"><h:outputText value="#{l.piezas}" /></p:column>
+                    <p:column headerText="Ingreso" styleClass="num">
+                        <h:outputText value="#{l.ingreso}"><f:convertNumber pattern="$#,##0.00" /></h:outputText>
+                    </p:column>
+                    <p:column headerText="Costo" styleClass="num">
+                        <h:outputText value="#{l.costo}"><f:convertNumber pattern="$#,##0.00" /></h:outputText>
+                    </p:column>
+                    <p:column headerText="Ganancia bruta" styleClass="num">
+                        <h:outputText value="#{l.ganancia}"><f:convertNumber pattern="$#,##0.00" /></h:outputText>
+                    </p:column>
+                </p:dataTable>
+
+                <h3 class="subtitulo-reporte">Por producto</h3>
+                <p:dataTable id="tablaGanProductos" value="#{reportesUI.ganancia.productos}" var="l"
+                             styleClass="tabla-reporte" tableStyle="table-layout:auto;width:100%"
+                             paginator="true" rows="10" paginatorPosition="bottom"
+                             emptyMessage="Sin ventas en el periodo">
+                    <p:column headerText="Producto"><h:outputText value="#{l.nombre}" /></p:column>
+                    <p:column headerText="Piezas" styleClass="num"><h:outputText value="#{l.piezas}" /></p:column>
+                    <p:column headerText="Ingreso" styleClass="num">
+                        <h:outputText value="#{l.ingreso}"><f:convertNumber pattern="$#,##0.00" /></h:outputText>
+                    </p:column>
+                    <p:column headerText="Costo" styleClass="num">
+                        <h:outputText value="#{l.costo}"><f:convertNumber pattern="$#,##0.00" /></h:outputText>
+                    </p:column>
+                    <p:column headerText="Ganancia bruta" styleClass="num">
+                        <h:outputText value="#{l.ganancia}"><f:convertNumber pattern="$#,##0.00" /></h:outputText>
+                    </p:column>
+                </p:dataTable>
+            </h:panelGroup>
+
+            <!-- ==================================================================== -->
+            <!--  ESTADO Y ROTACIÓN DEL INVENTARIO                                    -->
+            <!-- ==================================================================== -->
+            <h:panelGroup id="areaInventario" layout="block" styleClass="area-reporte"
+                          rendered="#{reportesUI.vista eq 'INVENTARIO' and reportesUI.inventario ne null}">
+
+                <h2 class="titulo-reporte">
+                    Inventario · #{reportesUI.inventario.periodo.titulo}
+                    <h:outputText value=" (mes en curso)" rendered="#{reportesUI.enCurso}" styleClass="en-curso" />
+                </h2>
+
+                <h:panelGroup layout="block" styleClass="nota-reporte" rendered="#{reportesUI.inventario.vacio}">
+                    No hay productos con esos filtros en este mes.
+                </h:panelGroup>
+
+                <div class="nota-reporte nota-suave">
+                    Rotación = piezas vendidas ÷ existencia promedio del mes (entre la inicial y la final).
+                    Las existencias inicial y final se reconstruyen con las entradas, ventas y mermas registradas.
+                    Las filas en rojo están agotadas o con stock bajo: conviene reabastecerlas.
+                </div>
+
+                <h3 class="subtitulo-reporte">Productos con ventas (mayor rotación primero)</h3>
+                <p:dataTable id="tablaConVentas" value="#{reportesUI.inventario.conVentas}" var="f"
+                             styleClass="tabla-reporte tabla-inventario" tableStyle="table-layout:auto;width:100%"
+                             rowStyleClass="#{f.alerta ? 'fila-alerta' : ''}"
+                             paginator="true" rows="15" paginatorPosition="bottom"
+                             emptyMessage="Ningún producto tuvo ventas en el mes">
+                    <p:column headerText="Código"><h:outputText value="#{f.codigo}" /></p:column>
+                    <p:column headerText="Producto"><h:outputText value="#{f.nombre}" /></p:column>
+                    <p:column headerText="Categoría"><h:outputText value="#{f.categoria}" /></p:column>
+                    <p:column headerText="Inicial" styleClass="num"><h:outputText value="#{f.inicial}" /></p:column>
+                    <p:column headerText="Entradas" styleClass="num"><h:outputText value="#{f.entradas}" /></p:column>
+                    <p:column headerText="Vendidas" styleClass="num"><h:outputText value="#{f.vendidas}" /></p:column>
+                    <p:column headerText="Mermas" styleClass="num"><h:outputText value="#{f.mermas}" /></p:column>
+                    <p:column headerText="Final" styleClass="num"><h:outputText value="#{f.finalMes}" /></p:column>
+                    <p:column headerText="Actual" styleClass="num"><h:outputText value="#{f.actual}" /></p:column>
+                    <p:column headerText="Estado"><h:outputText value="#{f.estado.etiqueta}" /></p:column>
+                    <p:column headerText="Rotación" styleClass="num"><h:outputText value="#{f.rotacionTexto}" /></p:column>
+                </p:dataTable>
+
+                <h3 class="subtitulo-reporte">Sin ventas en el mes</h3>
+                <p:dataTable id="tablaSinMovimiento" value="#{reportesUI.inventario.sinMovimiento}" var="f"
+                             styleClass="tabla-reporte tabla-inventario" tableStyle="table-layout:auto;width:100%"
+                             rowStyleClass="#{f.alerta ? 'fila-alerta' : ''}"
+                             paginator="true" rows="15" paginatorPosition="bottom"
+                             emptyMessage="Todos los productos tuvieron ventas">
+                    <p:column headerText="Código"><h:outputText value="#{f.codigo}" /></p:column>
+                    <p:column headerText="Producto"><h:outputText value="#{f.nombre}" /></p:column>
+                    <p:column headerText="Categoría"><h:outputText value="#{f.categoria}" /></p:column>
+                    <p:column headerText="Proveedor"><h:outputText value="#{f.proveedor}" /></p:column>
+                    <p:column headerText="Inicial" styleClass="num"><h:outputText value="#{f.inicial}" /></p:column>
+                    <p:column headerText="Entradas" styleClass="num"><h:outputText value="#{f.entradas}" /></p:column>
+                    <p:column headerText="Mermas" styleClass="num"><h:outputText value="#{f.mermas}" /></p:column>
+                    <p:column headerText="Final" styleClass="num"><h:outputText value="#{f.finalMes}" /></p:column>
+                    <p:column headerText="Actual" styleClass="num"><h:outputText value="#{f.actual}" /></p:column>
+                    <p:column headerText="Estado"><h:outputText value="#{f.estado.etiqueta}" /></p:column>
+                </p:dataTable>
+            </h:panelGroup>
+
+        </h:form>
+
+    </ui:define>
+
+</ui:composition>
