@@ -1,0 +1,233 @@
+/* Pantalla de reportes */
+
+.vistas-reporte {
+    margin-bottom: 16px;
+}
+
+.filtros-reporte {
+    display: grid;
+    grid-template-columns: auto minmax(180px, 260px) auto minmax(180px, 260px);
+    gap: 10px 14px;
+    align-items: center;
+    max-width: 900px;
+    margin-bottom: 12px;
+}
+
+.filtros-reporte .ui-selectonemenu,
+.filtros-reporte .p-datepicker,
+.filtros-reporte .ui-datepicker {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.botones-reporte {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.botones-reporte .espacio {
+    flex: 1;
+}
+
+.area-reporte {
+    max-width: 1100px;
+}
+
+.titulo-reporte {
+    font-size: 20px;
+    margin: 8px 0 12px 0;
+}
+
+.en-curso {
+    font-size: 13px;
+    font-weight: 600;
+    color: #0E7C86;
+}
+
+.subtitulo-reporte {
+    font-size: 15px;
+    margin: 22px 0 8px 0;
+}
+
+.kpis-reporte {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 6px 0 8px 0;
+}
+
+.kpi {
+    display: inline-flex;
+    flex-direction: column;
+    min-width: 160px;
+    padding: 10px 16px;
+    background: #E3F2F3;
+    color: #0E7C86;
+    border-radius: 12px;
+}
+
+.kpi .n {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.kpi .t {
+    font-size: 12px;
+}
+
+.kpi-principal {
+    background: #0E7C86;
+    color: #FFFFFF;
+}
+
+.nota-reporte {
+    margin: 8px 0;
+    padding: 8px 12px;
+    background: #FFF6DD;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+.nota-suave {
+    background: #F3F5F7;
+    color: #4A5560;
+}
+
+.tabla-reporte thead th,
+.tabla-reporte tbody td {
+    padding: 6px 8px;
+    font-size: 13px;
+}
+
+.tabla-reporte .num {
+    text-align: right;
+}
+
+.fila-total td {
+    font-weight: 700;
+}
+
+.fila-alerta td {
+    background: #FDECEC !important;
+    color: #B3261E;
+}
+
+@media print {
+    .filtros-reporte,
+    .botones-reporte,
+    .vistas-reporte {
+        display: none !important;
+    }
+}
+
+/* Tickets como contenedores */
+.tickets-reporte {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+}
+
+.ticket {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 12px;
+    border: 1px solid #C9D6D8;
+    border-radius: 12px;
+    background: #FFFFFF;
+    break-inside: avoid;
+}
+
+.ticket-cabecera {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-bottom: 4px;
+    border-bottom: 1px dashed #C9D6D8;
+}
+
+.ticket-numero {
+    font-weight: 700;
+    color: #0E7C86;
+}
+
+.ticket-fecha,
+.ticket-metodo {
+    font-size: 12px;
+    color: #4A5560;
+}
+
+.ticket-metodo {
+    margin: 4px 0;
+}
+
+.ticket-lineas {
+    width: 100%;
+    font-size: 13px;
+    border-collapse: collapse;
+}
+
+.ticket-lineas td {
+    padding: 2px 0;
+}
+
+.ticket-lineas .cant {
+    width: 1%;
+    white-space: nowrap;
+    padding-right: 6px;
+}
+
+.ticket-lineas .num {
+    text-align: right;
+    white-space: nowrap;
+    padding-left: 6px;
+}
+
+.ticket-pie {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    padding-top: 4px;
+    border-top: 1px dashed #C9D6D8;
+    font-size: 12px;
+}
+
+.ticket-total {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+/* Buscador y pagos del ticket */
+.buscador-tickets {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 8px 0 12px 0;
+}
+
+.ticket-pagos {
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px dashed #C9D6D8;
+    font-size: 12px;
+}
+
+.ticket-pagos-titulo {
+    font-weight: 600;
+    color: #4A5560;
+    margin-bottom: 2px;
+}
+
+.ticket-pago {
+    display: flex;
+    justify-content: space-between;
+}
+
+@media print {
+    .buscador-tickets {
+        display: none !important;
+    }
+}

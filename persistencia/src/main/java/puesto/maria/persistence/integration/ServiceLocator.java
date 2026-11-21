@@ -26,6 +26,7 @@ public class ServiceLocator {
     private static VentaDAO ventaDAO;
     private static ClienteDAO clienteDAO;
     private static BitacoraDAO bitacoraDAO;
+    private static ReporteDAO reporteDAO;
 
     private static EntityManager getEntityManager(){
         return HibernateUtil.getEntityManager();
@@ -129,6 +130,17 @@ public class ServiceLocator {
             bitacoraDAO = new BitacoraDAO(getEntityManager());
         }
         return bitacoraDAO;
+    }
+
+    /**
+     * Consultas de reportes (solo lectura). Usa su propio EntityManager, separado del de ventas, inventario y
+     * mermas.
+     */
+    public static ReporteDAO getInstanceReporteDAO(){
+        if(reporteDAO == null){
+            reporteDAO = new ReporteDAO(getEntityManager());
+        }
+        return reporteDAO;
     }
 
 }
