@@ -1,6 +1,7 @@
 package puesto.maria.persistence.dao;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 import puesto.maria.entity.Categoria;
 import puesto.maria.persistence.persistence.AbstractDAO;
 
@@ -25,12 +26,16 @@ public class CategoriaDAO extends AbstractDAO<Categoria> {
 
     /** True si existe otra categoría con ese nombre (sin distinguir mayúsculas). */
     public boolean existeNombre(String nombre, Integer idExcluido) {
-        Long n = execute(em -> em
-                .createQuery("SELECT COUNT(c) FROM Categoria c WHERE LOWER(c.nombre) = :nombre"
-                        + (idExcluido == null ? "" : " AND c.id <> :id"), Long.class)
-                .setParameter("nombre", nombre.toLowerCase())
-                .setParameter("id", idExcluido == null ? -1 : idExcluido)
-                .getSingleResult());
+        Long n = execute(em -> {
+            TypedQuery<Long> consulta = em.createQuery("SELECT COUNT(c) FROM Categoria c WHERE LOWER(c.nombre) = :nombre"
+                    + (idExcluido == null ? "" : " AND c.id <> :id"), Long.class)
+                    .setParameter("nombre", nombre.toLowerCase());
+            // El parametro :id solo existe en la consulta cuando se modifica una categoria existente.
+            if (idExcluido != null) {
+                consulta.setParameter("id", idExcluido);
+            }
+            return consulta.getSingleResult();
+        });
         return n > 0;
     }
 
