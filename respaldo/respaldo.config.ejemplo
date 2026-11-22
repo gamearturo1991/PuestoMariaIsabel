@@ -1,0 +1,19 @@
+# Copia este archivo con el nombre  respaldo.config  y ajusta los valores.
+# respaldo.config NO se sube a GitHub (esta en .gitignore) porque lleva la contrasena.
+# Una linea por dato, formato CLAVE=valor, sin comillas. Las lineas que empiezan con # se ignoran.
+
+# Carpeta donde esta mysqldump.exe y mysql.exe. Si ya estan en el PATH de Windows, borra esta linea.
+MYSQL_BIN=C:\Program Files\MySQL\MySQL Server 8.0\bin
+
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=PuestoMI
+DB_USER=root
+DB_PASS=escribe_aqui_tu_contrasena
+
+# Cuantos dias se conservan los respaldos automaticos (los mas viejos se borran solos).
+DIAS_CONSERVAR=30
+
+# Carpeta de las copias. Si no pones esta linea (quitale el # para usarla) se usa la carpeta "copias" junto a estos archivos.
+# Lo ideal es una unidad distinta al disco del sistema o una carpeta sincronizada con la nube.
+#CARPETA_COPIAS=D:\Respaldos
