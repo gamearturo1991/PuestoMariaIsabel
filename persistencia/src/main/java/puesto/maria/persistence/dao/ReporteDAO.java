@@ -28,6 +28,17 @@ public class ReporteDAO extends AbstractDAO<Venta> {
         this.entityManager = em;
     }
 
+    /** Cliente de cada venta del periodo (solo las que tienen cliente). Columnas: idVenta, idCliente, fechaHora. */
+    public List<Object[]> clientesDeVentas(Instant desde, Instant hasta) {
+        return execute(em -> em.createQuery(
+                        "SELECT v.id, v.idCliente.id, v.fechaHora FROM Venta v "
+                                + "WHERE v.idCliente IS NOT NULL AND v.fechaHora >= :desde AND v.fechaHora < :hasta",
+                        Object[].class)
+                .setParameter("desde", desde)
+                .setParameter("hasta", hasta)
+                .getResultList());
+    }
+
     @Override
     public EntityManager getEntityManager() {
         return entityManager;

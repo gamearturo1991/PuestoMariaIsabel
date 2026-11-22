@@ -20,6 +20,8 @@ public final class AccionBitacora {
     public static final String CORTE_CAJA = "CORTE_CAJA";
     public static final String INICIO_SESION = "INICIO_SESION";
     public static final String CIERRE_SESION = "CIERRE_SESION";
+    public static final String FACTURAR = "FACTURAR";
+    public static final String DESHACER_FACTURA = "DESHACER_FACTURA";
 
     private AccionBitacora() {
     }

@@ -231,6 +231,10 @@
                                     <span class="ticket-numero">Folio #{t.folio}</span>
                                     <span class="ticket-fecha">#{t.fecha}</span>
                                 </div>
+                                <div class="ticket-cliente" style="font-size:12px;color:#4A5560;margin-bottom:4px">
+                                    Cliente: <b>#{t.cliente}</b>
+                                    <h:outputText value=" · #{t.clienteRfc}" rendered="#{t.conCliente}" />
+                                </div>
                                 <table class="ticket-lineas">
                                     <ui:repeat value="#{t.lineas}" var="l">
                                         <tr>

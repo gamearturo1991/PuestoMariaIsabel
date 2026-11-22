@@ -59,8 +59,39 @@ public class DelegateReportes {
                 filasPago(desde, hasta), filasVendido(desde, hasta), cantidad(noCompletadas),
                 monto(noCompletadas));
         List<CalculoReportes.FilaLinea> lineas = filasLinea(desde, hasta);
-        reporte.setTickets(CalculoReportes.tickets(zona(), lineas, filasMetodo(desde, hasta)));
+        List<ReporteVentas.Ticket> tickets = CalculoReportes.tickets(zona(), lineas, filasMetodo(desde, hasta));
+        asignarClientes(tickets, desde, hasta);
+        reporte.setTickets(tickets);
         return reporte;
+    }
+
+    /** Pone en cada ticket su cliente con el nombre y régimen que tenía el día de la venta. */
+    private void asignarClientes(List<ReporteVentas.Ticket> tickets, Instant desde, Instant hasta) {
+        Map<Integer, Object[]> porVenta = new java.util.HashMap<>();
+        for (Object[] f : dao().clientesDeVentas(desde, hasta)) {
+            porVenta.put((Integer) f[0], f);
+        }
+        if (porVenta.isEmpty()) {
+            return;
+        }
+        DelegateCliente delegateCliente = new DelegateCliente();
+        Map<Integer, puesto.maria.entity.Cliente> clientes = new java.util.HashMap<>();
+        Map<Integer, HistorialCliente> historiales = new java.util.HashMap<>();
+        for (ReporteVentas.Ticket t : tickets) {
+            Object[] f = porVenta.get(t.getNumero());
+            if (f == null) {
+                continue;
+            }
+            Integer idCliente = (Integer) f[1];
+            puesto.maria.entity.Cliente c = clientes.computeIfAbsent(idCliente,
+                    id -> ServiceLocator.getInstanceClienteDAO().find(id).orElse(null));
+            if (c == null) {
+                continue;
+            }
+            HistorialCliente h = historiales.computeIfAbsent(idCliente, id -> delegateCliente.historial(c));
+            HistorialCliente.Datos d = h.en((Instant) f[2]);
+            t.setCliente(d.nombre(), c.getRfc(), d.regimen());
+        }
     }
 
     public ReporteGanancia ganancia(PeriodoReporte periodo) {

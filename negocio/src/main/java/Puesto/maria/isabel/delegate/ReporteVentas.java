@@ -138,6 +138,9 @@ public class ReporteVentas implements Serializable {
         private final long piezas;
         private final BigDecimal total;
         private final List<LineaTicket> lineas;
+        private String clienteNombre;
+        private String clienteRfc;
+        private String clienteRegimen;
 
         public Ticket(int numero, String fecha, List<PagoTicket> pagos, long piezas, BigDecimal total,
                       List<LineaTicket> lineas) {
@@ -175,6 +178,18 @@ public class ReporteVentas implements Serializable {
         public long getPiezas() { return piezas; }
         public BigDecimal getTotal() { return total; }
         public List<LineaTicket> getLineas() { return lineas; }
+
+        /** Cliente de la venta con el nombre y régimen que tenía el día de la venta. */
+        public void setCliente(String nombre, String rfc, String regimen) {
+            this.clienteNombre = nombre;
+            this.clienteRfc = rfc;
+            this.clienteRegimen = regimen;
+        }
+        public boolean isConCliente() { return clienteNombre != null; }
+        /** Nombre del cliente o "Público en general". */
+        public String getCliente() { return clienteNombre == null ? "Público en general" : clienteNombre; }
+        public String getClienteRfc() { return clienteRfc; }
+        public String getClienteRegimen() { return clienteRegimen; }
     }
 
     private final PeriodoReporte periodo;
