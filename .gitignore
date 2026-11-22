@@ -38,3 +38,6 @@ build/
 
 ### Mac OS ###
 .DS_Store
+### Respaldos (llevan datos y contrasena) ###
+respaldo/respaldo.config
+respaldo/copias/
