@@ -1,0 +1,219 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html>
+<ui:composition template="/WEB-INF/templates/layout.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui">
+
+    <ui:define name="titulo">Manual de usuario</ui:define>
+
+    <ui:define name="head">
+        <h:outputStylesheet name="manual.css" />
+    </ui:define>
+
+    <ui:define name="contenido">
+        <div class="manual">
+
+            <p>Esta guía explica cómo usar cada pantalla del sistema. Usa el índice para ir directo a lo que necesitas.</p>
+
+            <div class="manual-indice">
+                <a href="#inicio">1. Primeros pasos</a>
+                <a href="#nuevo-proveedor">2. Proveedor y producto nuevos</a>
+                <a href="#ventas">3. Ventas</a>
+                <a href="#productos">4. Productos</a>
+                <a href="#categorias">5. Categorías</a>
+                <a href="#proveedores">6. Proveedores</a>
+                <a href="#entradas">7. Entradas de mercancía</a>
+                <a href="#inventario">8. Inventario y alertas</a>
+                <a href="#mermas">9. Mermas</a>
+                <a href="#clientes">10. Clientes y facturación</a>
+                <a href="#reportes">11. Reportes</a>
+                <a href="#bitacora">12. Bitácora</a>
+                <a href="#respaldo">13. Respaldo de la base de datos</a>
+                <a href="#dudas">14. Dudas frecuentes</a>
+            </div>
+
+            <!-- ============================ 1 ============================ -->
+            <h2 id="inicio">1. Primeros pasos</h2>
+            <ul>
+                <li>Entra con tu usuario y contraseña en la pantalla de inicio de sesión. Todo lo que hagas queda registrado en la bitácora con tu nombre.</li>
+                <li>El menú de la izquierda lleva a cada pantalla. Abajo aparece tu nombre y el enlace <b>Cerrar sesión</b>.</li>
+                <li>Arriba a la derecha se muestra la fecha. Si hay productos con poco stock aparece un contador de <b>alertas</b>; al pulsarlo abre Inventario y alertas.</li>
+                <li>Cuando algo no se puede hacer, el sistema muestra un aviso en la esquina con el motivo. Léelo: casi siempre dice qué falta.</li>
+            </ul>
+
+            <!-- ============================ 2 ============================ -->
+            <div class="manual-destacado" id="nuevo-proveedor">
+                <h2>2. Cuando llega un proveedor nuevo con productos nuevos</h2>
+                <p>Este es el proceso que más cuesta encontrar. Siempre se hace <b>en este orden</b>, porque cada paso necesita al anterior:</p>
+                <ol>
+                    <li><b>Registra al proveedor</b> en <b>Proveedores</b> (botón <i>Nuevo proveedor</i>).</li>
+                    <li><b>Crea el producto</b> en <b>Productos</b> (botón <i>Nuevo producto</i>) y elige en el campo <i>Proveedor</i> al proveedor que acabas de registrar. Ahí también capturas el código corto, la categoría, el costo, el precio de venta y el stock mínimo y máximo.</li>
+                    <li><b>Registra la recepción</b> en <b>Entradas de mercancía</b> cuando el proveedor entregue el producto: elige al proveedor, el producto y la cantidad de piezas que llegaron.</li>
+                </ol>
+                <p>Al terminar tendrás el proveedor, el producto y las piezas en existencia, listos para venderse.</p>
+                <div class="manual-nota">
+                    El producto recién creado empieza con existencia en cero. Hasta que no registres la entrada de mercancía (paso 3) aparecerá como <i>Agotado</i> y no se podrá vender.
+                </div>
+            </div>
+
+            <!-- ============================ 3 ============================ -->
+            <h2 id="ventas">3. Ventas</h2>
+            <ol>
+                <li>Busca o escanea el producto en la barra <i>Escanear o buscar producto</i> y selecciónalo. Se agrega a la lista con su precio.</li>
+                <li>Ajusta la columna <b>Cantidad</b> si vendes más de una pieza. El sistema no deja vender más piezas de las que hay en existencia.</li>
+                <li>Si el cliente pide factura, elige su nombre en el selector <i>Cliente</i> (arriba a la derecha de la barra de búsqueda). Si no, deja <i>Público en general</i>. Solo aparecen los clientes activos. Se elige una sola vez para toda la venta.</li>
+                <li>Pulsa <b>Cobrar</b>. En la ventana captura cuánto paga el cliente en <b>Efectivo</b>, <b>Transferencia</b> y <b>Tarjeta</b>. Puedes combinar los tres métodos.</li>
+                <li>Cuando aparezca <i>Paga completa</i>, pulsa <b>Confirmar venta</b>. El botón no se activa hasta que el pago cubra el total.</li>
+                <li>Se muestra el ticket (si dejaste marcada la casilla <i>Mostrar ticket al terminar</i>). Puedes imprimirlo o cerrarlo.</li>
+            </ol>
+            <ul>
+                <li><b>Cambio:</b> solo se entrega del efectivo. Si el cliente paga de más con transferencia o tarjeta, el sistema avisa.</li>
+                <li><b>Tarjeta:</b> la terminal cobra 4.5 % de comisión. El negocio la absorbe: no se le suma al cliente, pero se descuenta de la ganancia en los reportes.</li>
+                <li><b>Cancelar venta</b> limpia la pantalla sin registrar nada. Después de cobrar, la pantalla también queda limpia para la siguiente venta.</li>
+                <li>Cada venta descuenta las piezas del inventario automáticamente.</li>
+            </ul>
+
+            <!-- ============================ 4 ============================ -->
+            <h2 id="productos">4. Productos</h2>
+            <p>Aquí se registran y se administran los productos que se venden.</p>
+            <ul>
+                <li><b>Nuevo producto:</b> captura código corto (sin espacios y que no se repita, por ejemplo <i>fantfre600</i>), nombre, categoría, proveedor, costo, precio de venta, stock mínimo y stock máximo. Todos los campos son obligatorios; el costo y el precio deben ser mayores a cero y el máximo no puede ser menor que el mínimo.</li>
+                <li><b>Modificar</b> (lápiz): cambia los datos del producto.</li>
+                <li><b>Deshabilitar:</b> el producto deja de poder venderse pero no se borra, para conservar su historial. Marca <i>Mostrar deshabilitados</i> para verlos en gris. Si vuelves a recibir mercancía de un producto deshabilitado, se reactiva solo.</li>
+                <li>El buscador acepta código o nombre.</li>
+            </ul>
+            <div class="manual-nota">Un producto nuevo necesita un proveedor y una categoría ya registrados. Si no existen, créalos antes en sus pantallas.</div>
+
+            <!-- ============================ 5 ============================ -->
+            <h2 id="categorias">5. Categorías</h2>
+            <ul>
+                <li>Sirven para agrupar los productos (refrescos, botanas, etc.) y para filtrar reportes.</li>
+                <li>Puedes registrar y modificar categorías. El nombre es obligatorio y no se puede repetir.</li>
+                <li>Una categoría solo se elimina si no tiene productos; si los tiene, el sistema lo indica.</li>
+            </ul>
+
+            <!-- ============================ 6 ============================ -->
+            <h2 id="proveedores">6. Proveedores</h2>
+            <ul>
+                <li><b>Nuevo proveedor:</b> nombre (obligatorio y único), empresa, correo y teléfono.</li>
+                <li><b>Desactivar:</b> el proveedor ya no aparece en productos ni entradas nuevas. Se puede volver a activar.</li>
+                <li><b>Eliminar:</b> solo si nunca tuvo productos ni entradas. Si los tuvo, hay que desactivarlo.</li>
+                <li>La tabla muestra cuántos productos tiene cada proveedor.</li>
+            </ul>
+
+            <!-- ============================ 7 ============================ -->
+            <h2 id="entradas">7. Entradas de mercancía</h2>
+            <p>Aquí se registra lo que llega del proveedor y se suma al inventario. Hay dos formas:</p>
+            <h3>Un producto</h3>
+            <ol>
+                <li>Elige el <b>proveedor</b> y busca el <b>producto</b> por código o nombre. Verás su existencia, mínimo, máximo, costo y precio actuales.</li>
+                <li>Captura la <b>cantidad de piezas</b> y el <b>costo de compra</b> por pieza.</li>
+                <li>El <b>precio de venta</b> se sugiere manteniendo la proporción actual; puedes cambiarlo.</li>
+                <li>Guarda la entrada.</li>
+            </ol>
+            <h3>Recibir un proveedor</h3>
+            <ol>
+                <li>Pulsa <i>Recibir un proveedor</i> y elige al proveedor. Aparecen todos sus productos.</li>
+                <li>Captura la cantidad solo de los que llegaron (puedes filtrar por nombre). Arriba se resume cuántos productos y piezas vas a recibir.</li>
+                <li>Guarda: se registran todos de una vez.</li>
+            </ol>
+            <div class="manual-nota">El costo y el precio que captures se guardan como los vigentes del producto. Si el costo cambió respecto a la compra anterior, revisa el precio de venta.</div>
+
+            <!-- ============================ 8 ============================ -->
+            <h2 id="inventario">8. Inventario y alertas</h2>
+            <p>Consulta de existencias en tiempo real. Cada producto muestra su estado:</p>
+            <ul>
+                <li><b>Agotado:</b> no hay piezas.</li>
+                <li><b>Stock bajo:</b> la existencia es igual o menor al mínimo. Estos son los que cuentan en las alertas.</li>
+                <li><b>Sobre el máximo:</b> hay más piezas que el máximo (solo es una referencia, no bloquea nada).</li>
+                <li><b>Normal:</b> cualquier otro caso.</li>
+            </ul>
+            <p>Puedes buscar por código o nombre y filtrar por estado. Al iniciar sesión se muestra un aviso con los productos que necesitan reposición.</p>
+
+            <!-- ============================ 9 ============================ -->
+            <h2 id="mermas">9. Mermas</h2>
+            <p>Una merma es producto que se pierde y sale del inventario.</p>
+            <ol>
+                <li>En <i>Registrar merma</i> elige el producto, las piezas y el <b>motivo</b>: <i>Empaque dañado</i>, <i>Caducado</i>, <i>Consumo propio</i> o <i>Faltante o pérdida de logística</i>.</li>
+                <li>Confirma. Se descuentan las piezas y se guarda la pérdida a costo, con tu usuario.</li>
+            </ol>
+            <ul>
+                <li><b>Anular una merma</b> (en el <i>Historial de mermas</i>): si se capturó por error, rescatas las piezas indicando cuántas y describiendo el error. Las piezas regresan al inventario.</li>
+                <li>El historial se consulta por periodo (<i>Desde</i> y <i>Hasta</i>) y por motivo; el botón <i>Mes actual</i> lo deja en el mes en curso.</li>
+            </ul>
+            <p class="manual-pendiente">El registro de devoluciones de clientes todavía está en desarrollo.</p>
+
+            <!-- ============================ 10 ============================ -->
+            <h2 id="clientes">10. Clientes y facturación</h2>
+            <h3>Clientes</h3>
+            <ul>
+                <li><b>Nuevo cliente:</b> nombre o razón social, RFC (12 caracteres si es persona moral, 13 si es persona física) y régimen fiscal de la lista. Los tres son obligatorios. El RFC no se puede repetir.</li>
+                <li><b>Modificar:</b> se puede cambiar el nombre y el régimen, <b>no el RFC</b>. Las ventas anteriores conservan el nombre y el régimen que tenía el cliente el día de la venta.</li>
+                <li>El botón del reloj muestra los nombres que ha tenido el cliente.</li>
+                <li><b>Desactivar:</b> los clientes nunca se eliminan. Uno inactivo ya no aparece al vender, pero sus compras anteriores se conservan.</li>
+            </ul>
+            <h3>Facturación mensual</h3>
+            <ol>
+                <li>Pulsa <i>Facturación mensual</i> y elige el mes y el año. No se pueden consultar meses futuros.</li>
+                <li>Verás cuánto compró cada cliente en el mes (solo ventas completadas).</li>
+                <li>Cuando factures a un cliente en el portal del SAT, marca su casilla <b>Facturado</b> y escribe el <b>folio fiscal</b>. Se guarda el total de ese momento y la fecha.</li>
+                <li>Una casilla marcada no se puede quitar directamente. Si fue un error, pulsa <b>Deshacer factura</b> y escribe el motivo: es obligatorio y queda en la bitácora.</li>
+            </ol>
+            <div class="manual-nota">Si después de facturar se anula una venta de ese mes, el total cambia y aparece un triángulo de aviso junto a la cantidad.</div>
+
+            <!-- ============================ 11 ============================ -->
+            <h2 id="reportes">11. Reportes</h2>
+            <p>Elige semana o mes y la fecha. Los periodos son semana de lunes a domingo o mes completo, y no se pueden consultar periodos futuros. Solo cuentan las ventas completadas. Hay cuatro pestañas:</p>
+            <ul>
+                <li><b>Ventas por periodo:</b> total vendido, tickets, piezas, ventas por día, por método de pago, por categoría y por producto.</li>
+                <li><b>Tickets:</b> cada venta como tarjeta con su folio (por ejemplo #000003), productos, cliente (con RFC si lo hubo) y cómo se pagó. El buscador acepta el número de folio. Aquí también se exporta a CSV.</li>
+                <li><b>Ingresos y ganancia:</b> ingresos, costo de lo vendido, mermas y comisiones de tarjeta; de ahí sale la ganancia neta.</li>
+                <li><b>Estado e inventario:</b> existencia al inicio y al final del mes, lo recibido, lo vendido y la rotación de cada producto. La rotación indica cuántas veces se renovó el inventario: piezas vendidas entre el promedio de existencia.</li>
+            </ul>
+            <p>El botón <b>Imprimir</b> genera la versión para imprimir o guardar como PDF.</p>
+
+            <!-- ============================ 12 ============================ -->
+            <h2 id="bitacora">12. Bitácora</h2>
+            <p>Es el registro de lo que se hace en el sistema: altas, cambios, ventas, entradas, mermas, facturación, inicios de sesión, etc. Solo se consulta; nadie puede editarla ni borrarla.</p>
+            <ul>
+                <li>Filtra por fechas (<i>Desde</i> y <i>Hasta</i>), usuario, acción y tabla. <i>Últimos 7 días</i> es un atajo.</li>
+                <li>Cada movimiento muestra quién lo hizo, cuándo, qué cambió (valor anterior y nuevo) y el motivo cuando aplica.</li>
+                <li>Se muestran hasta 1,000 movimientos por consulta; si necesitas menos, acota el periodo.</li>
+            </ul>
+
+            <!-- ============================ 13 ============================ -->
+            <h2 id="respaldo">13. Respaldo de la base de datos</h2>
+            <p>Esta parte se hace fuera del sistema, en la computadora donde está instalado, y la configura el administrador.</p>
+            <ul>
+                <li>Un respaldo diario automático guarda una copia de toda la información en la carpeta <i>respaldo\copias</i> del proyecto (archivos <i>PuestoMI_fecha.sql</i>). Se conservan los de los últimos 30 días.</li>
+                <li>Para restaurar un respaldo se usa <i>restaurar.bat</i>. <b>Reemplaza los datos actuales</b>, así que antes hay que cerrar el sistema; el script pide confirmación y guarda una copia del estado actual.</li>
+                <li>Conviene copiar la carpeta de respaldos a una USB o a la nube de vez en cuando.</li>
+                <li>Los pasos completos están en el archivo <i>LEEME.md</i> de la carpeta <i>respaldo</i>.</li>
+            </ul>
+
+            <!-- ============================ 14 ============================ -->
+            <h2 id="dudas">14. Dudas frecuentes</h2>
+            <h3>No encuentro un producto al vender o en una entrada.</h3>
+            <p>Puede estar deshabilitado o no estar registrado. Búscalo en <b>Productos</b> con <i>Mostrar deshabilitados</i>; si no existe, créalo.</p>
+            <h3>Registré un producto nuevo y no se puede vender.</h3>
+            <p>Falta registrar su entrada de mercancía: sin piezas en existencia el producto aparece agotado.</p>
+            <h3>No me deja crear un producto.</h3>
+            <p>Revisa que el proveedor y la categoría existan, que el código corto no tenga espacios ni esté repetido, y que costo, precio y stocks sean válidos.</p>
+            <h3>No me deja eliminar un proveedor o una categoría.</h3>
+            <p>Si ya tiene productos o entradas, no se elimina: desactiva al proveedor. En el caso de una categoría, cambia antes sus productos a otra.</p>
+            <h3>Me equivoqué al registrar una merma.</h3>
+            <p>Anúlala desde el historial de mermas, indicando cuántas piezas rescatar y qué error hubo.</p>
+            <h3>Marqué como facturado a un cliente por error.</h3>
+            <p>Usa <b>Deshacer factura</b> en Clientes y facturación y escribe el motivo.</p>
+            <h3>El cliente cambió de nombre o de régimen.</h3>
+            <p>Modifícalo en Clientes. El RFC es lo que lo identifica y no cambia; las ventas anteriores conservan los datos que tenía.</p>
+            <h3>La venta no me deja confirmar.</h3>
+            <p>El pago debe cubrir el total y el cambio solo se da del efectivo. Revisa el renglón <i>Falta</i> en la ventana de cobro.</p>
+
+        </div>
+    </ui:define>
+
+</ui:composition>
