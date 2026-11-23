@@ -93,17 +93,17 @@ public class ServiceFacadeLocator {
         return facadeBitacora;
     }
 
-    public static FacadeReportes getInstanceFacadeReportes() {
-        if (facadeReportes == null) {
-            facadeReportes = new FacadeReportes();
-        }
-        return facadeReportes;
-    }
-
     public static FacadeDevolucion getInstanceFacadeDevolucion() {
         if (facadeDevolucion == null) {
             facadeDevolucion = new FacadeDevolucion();
         }
         return facadeDevolucion;
+    }
+
+    public static FacadeReportes getInstanceFacadeReportes() {
+        if (facadeReportes == null) {
+            facadeReportes = new FacadeReportes();
+        }
+        return facadeReportes;
     }
 }
