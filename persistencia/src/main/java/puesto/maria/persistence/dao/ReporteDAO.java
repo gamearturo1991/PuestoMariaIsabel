@@ -153,6 +153,57 @@ public class ReporteDAO extends AbstractDAO<Venta> {
                 .getSingleResult());
     }
 
+    /* ======================== devoluciones ======================== */
+    // Una devolución cuenta en el periodo en que se registró (no en el de la venta original).
+
+    /** Devoluciones del periodo. Columnas: fechaHora, monto reembolsado. */
+    public List<Object[]> devoluciones(Instant desde, Instant hasta) {
+        return execute(em -> em.createQuery(
+                        "SELECT d.fechaHora, d.montoReembolsado FROM Devolucion d "
+                                + "WHERE d.fechaHora >= :desde AND d.fechaHora < :hasta ORDER BY d.fechaHora",
+                        Object[].class)
+                .setParameter("desde", desde)
+                .setParameter("hasta", hasta)
+                .getResultList());
+    }
+
+    /**
+     * Lo devuelto por producto en el periodo, con las mismas columnas que {@link #vendidosPorProducto}: id,
+     * código, nombre, id de categoría, categoría, piezas, dinero reembolsado.
+     */
+    public List<Object[]> devueltosPorProducto(Instant desde, Instant hasta) {
+        return execute(em -> em.createQuery(
+                        "SELECT p.id, p.codigoCorto, p.nombre, c.id, c.nombre, SUM(dd.cantidad), "
+                                + "SUM(dd.cantidad * dv.precioUnitario) "
+                                + "FROM DetalleDevolucion dd JOIN dd.idDevolucion d JOIN dd.idDetalle dv "
+                                + "JOIN dv.idProducto p LEFT JOIN p.idCategoria c "
+                                + "WHERE d.fechaHora >= :desde AND d.fechaHora < :hasta "
+                                + "GROUP BY p.id, p.codigoCorto, p.nombre, c.id, c.nombre", Object[].class)
+                .setParameter("desde", desde)
+                .setParameter("hasta", hasta)
+                .getResultList());
+    }
+
+    /** Costo de adquisición de las piezas devueltas por producto en el periodo. Columnas: id de producto, costo. */
+    public List<Object[]> costoDevueltoPorProducto(Instant desde, Instant hasta) {
+        return execute(em -> em.createQuery(
+                        "SELECT p.id, SUM(dd.cantidad * l.costoUnitario) "
+                                + "FROM DetalleDevolucion dd JOIN dd.idDevolucion d JOIN dd.idLote l "
+                                + "JOIN l.idProducto p "
+                                + "WHERE d.fechaHora >= :desde AND d.fechaHora < :hasta "
+                                + "GROUP BY p.id", Object[].class)
+                .setParameter("desde", desde)
+                .setParameter("hasta", hasta)
+                .getResultList());
+    }
+
+    /** Piezas devueltas por producto (revendibles o no) antes del instante dado. */
+    public Map<Integer, Long> devueltasAntesDe(Instant corte) {
+        return mapa("SELECT p.id, SUM(dd.cantidad) FROM DetalleDevolucion dd JOIN dd.idDevolucion d "
+                + "JOIN dd.idDetalle dv JOIN dv.idProducto p WHERE d.fechaHora < :corte GROUP BY p.id",
+                corte, false);
+    }
+
     /** Todos los productos con su categoría y proveedor, recién leídos de la base. */
     public List<Producto> productos() {
         return execute(em -> {

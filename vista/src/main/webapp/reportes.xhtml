@@ -144,6 +144,13 @@
                     no suman a lo vendido.
                 </h:panelGroup>
 
+                <h:panelGroup layout="block" styleClass="nota-reporte" rendered="#{reportesUI.ventas.devoluciones gt 0}">
+                    En el periodo hubo #{reportesUI.ventas.devoluciones} devolución(es) por
+                    <h:outputText value="#{reportesUI.ventas.montoDevoluciones}"><f:convertNumber pattern="$#,##0.00" /></h:outputText>:
+                    ya están restadas de lo vendido, de las piezas y de los productos. Los tickets y los
+                    métodos de pago muestran lo cobrado originalmente.
+                </h:panelGroup>
+
                 <h3 class="subtitulo-reporte">Por día</h3>
                 <p:dataTable id="tablaDias" value="#{reportesUI.ventas.dias}" var="d" rowKey="#{d.fecha}"
                              styleClass="tabla-reporte" tableStyle="table-layout:auto;width:100%">
@@ -310,6 +317,13 @@
                     no suman a los ingresos.
                 </h:panelGroup>
 
+                <h:panelGroup layout="block" styleClass="nota-reporte" rendered="#{reportesUI.ganancia.devoluciones gt 0}">
+                    En el periodo hubo #{reportesUI.ganancia.devoluciones} devolución(es) por
+                    <h:outputText value="#{reportesUI.ganancia.montoDevoluciones}"><f:convertNumber pattern="$#,##0.00" /></h:outputText>:
+                    se restan de los ingresos y su costo no cuenta como costo de lo vendido. Las piezas que no
+                    se pudieron revender aparecen en las mermas.
+                </h:panelGroup>
+
                 <h3 class="subtitulo-reporte">Resumen</h3>
                 <p:dataTable id="tablaResumen" value="#{reportesUI.ganancia.resumen}" var="c"
                              styleClass="tabla-reporte tabla-resumen" tableStyle="table-layout:auto;width:100%"
@@ -320,7 +334,7 @@
                     </p:column>
                 </p:dataTable>
                 <div class="nota-reporte nota-suave">
-                    Ganancia neta = ingresos − costo de lo vendido − mermas − comisiones de tarjeta.
+                    Ganancia neta = ingresos (ventas − devoluciones) − costo de lo vendido − mermas − comisiones de tarjeta.
                     Cada pieza vendida cuenta con el costo al que se adquirió: salen primero las más antiguas.
                 </div>
 

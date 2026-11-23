@@ -7,7 +7,7 @@
                 xmlns:ui="jakarta.faces.facelets"
                 xmlns:p="http://primefaces.org/ui">
 
-    <ui:define name="titulo">Mermas</ui:define>
+    <ui:define name="titulo">Mermas y Devoluciones</ui:define>
 
     <ui:define name="head">
         <h:outputStylesheet name="productos.css" />
@@ -27,12 +27,13 @@
                     <p:selectOneButton id="modo" value="#{mermaUI.modo}">
                         <f:selectItem itemLabel="Registrar merma" itemValue="REGISTRAR" />
                         <f:selectItem itemLabel="Historial de mermas" itemValue="HISTORIAL" />
+                        <f:selectItem itemLabel="Devoluciones" itemValue="DEVOLUCIONES" />
                         <p:ajax listener="#{mermaUI.cambiarModo}" update="formMermas" />
                     </p:selectOneButton>
                 </div>
 
                 <!-- ===== Registrar una merma ===== -->
-                <h:panelGroup id="panelRegistrar" layout="block" rendered="#{!mermaUI.modoHistorial}">
+                <h:panelGroup id="panelRegistrar" layout="block" rendered="#{mermaUI.modo == 'REGISTRAR'}">
 
                     <div class="form-grid">
                         <p:outputLabel for="producto" value="Producto" />
@@ -225,6 +226,116 @@
                     </div>
                 </h:panelGroup>
 
+                <!-- ===== Devoluciones ===== -->
+                <h:panelGroup id="panelDevoluciones" layout="block"
+                              rendered="#{mermaUI.modo == 'DEVOLUCIONES'}">
+
+                    <div class="form-grid">
+                        <p:outputLabel for="folio" value="Folio de la venta" />
+                        <p:inputText id="folio" value="#{devolucionUI.folio}" placeholder="Número de folio">
+                            <p:keyFilter mask="pint" />
+                        </p:inputText>
+                    </div>
+
+                    <div class="dialogo-botones">
+                        <p:commandButton value="Limpiar" styleClass="ui-button-flat"
+                                         actionListener="#{devolucionUI.limpiar}"
+                                         process="@this" update="formMermas" />
+                        <p:commandButton value="Continuar" icon="pi pi-arrow-right"
+                                         actionListener="#{devolucionUI.continuar}"
+                                         process="@this folio" update="formMermas :growl" />
+                    </div>
+
+                    <!-- Aparece cuando ya se puso un folio -->
+                    <h:panelGroup layout="block" rendered="#{devolucionUI.folioListo}">
+
+                        <div class="info-producto">
+                            <span>Venta: <b>#{devolucionUI.folio}</b></span>
+                            <span>Fecha: <b>#{devolucionUI.fechaVenta}</b></span>
+                            <span>Atendió: <b>#{devolucionUI.usuarioVenta}</b></span>
+                            <span>Total:
+                                <b><h:outputText value="#{devolucionUI.totalVenta}">
+                                    <f:convertNumber pattern="$#,##0.00" />
+                                </h:outputText></b></span>
+                        </div>
+
+                        <p:dataTable value="#{devolucionUI.lineas}" var="l" styleClass="tabla-merma"
+                                     tableStyle="table-layout:auto;width:100%"
+                                     emptyMessage="La venta no tiene productos">
+                            <p:column headerText="Producto">
+                                <h:outputText value="#{l.nombre}" />
+                                <br />
+                                <h:outputText value="#{l.codigo}" styleClass="codigo" />
+                            </p:column>
+                            <p:column headerText="Vendidas" styleClass="num" width="90">
+                                <h:outputText value="#{l.vendidas}" />
+                            </p:column>
+                            <p:column headerText="Ya devueltas" styleClass="num" width="100">
+                                <h:outputText value="#{l.yaDevueltas}" />
+                            </p:column>
+                            <p:column headerText="Precio" styleClass="num" width="110">
+                                <h:outputText value="#{l.precio}">
+                                    <f:convertNumber pattern="$#,##0.00" />
+                                </h:outputText>
+                            </p:column>
+                            <p:column headerText="Devolver" width="120" rendered="#{devolucionUI.tipo != null}">
+                                <p:inputNumber value="#{l.cantidad}" decimalPlaces="0" minValue="0"
+                                               maxValue="#{l.disponibles}"
+                                               disabled="#{devolucionUI.tipo != 'PARCIAL' or l.disponibles lt 1}">
+                                    <p:ajax event="change" update=":formMermas:montoDev" />
+                                </p:inputNumber>
+                            </p:column>
+
+                            <p:column headerText="¿Se puede revender?" width="130"
+                                      rendered="#{devolucionUI.tipo != null}">
+                                <p:selectBooleanCheckbox value="#{l.revendible}">
+                                    <p:ajax update=":formMermas:montoDev" />
+                                </p:selectBooleanCheckbox>
+                            </p:column>
+
+                        </p:dataTable>
+
+                        <div class="form-grid">
+                            <p:outputLabel for="tipoDev" value="¿Qué se va a devolver?" />
+                            <p:selectOneButton id="tipoDev" value="#{devolucionUI.tipo}">
+                                <f:selectItem itemLabel="Toda la venta" itemValue="TOTAL" />
+                                <f:selectItem itemLabel="Solo algunos productos" itemValue="PARCIAL" />
+                                <p:ajax listener="#{devolucionUI.cambiarTipo}" update="formMermas" />
+                            </p:selectOneButton>
+                        </div>
+
+                        <h:panelGroup id="montoDev" layout="block">
+                            <h:panelGroup layout="block" styleClass="info-producto"
+                                          rendered="#{devolucionUI.tipo != null}">
+                                <span>Piezas a devolver: <b>#{devolucionUI.piezasADevolver}</b></span>
+                                <span>A reembolsar:
+                                    <b><h:outputText value="#{devolucionUI.montoReembolso}">
+                                        <f:convertNumber pattern="$#,##0.00" />
+                                    </h:outputText></b></span>
+                                <h:panelGroup rendered="#{devolucionUI.piezasNoRevendibles gt 0}">
+                                    <span>Irán a merma: <b>#{devolucionUI.piezasNoRevendibles}</b></span>
+                                </h:panelGroup>
+                            </h:panelGroup>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" rendered="#{devolucionUI.tipo != null}">
+                            <div class="form-grid obs">
+                                <p:outputLabel for="motivoDev" value="Motivo de la devolución" />
+                                <p:inputTextarea id="motivoDev" value="#{devolucionUI.motivo}"
+                                                 rows="2" autoResize="false"
+                                                 placeholder="Por qué el cliente devuelve el producto" />
+                            </div>
+
+                            <div class="dialogo-botones">
+                                <p:commandButton value="Registrar devolución" icon="pi pi-check"
+                                                 actionListener="#{devolucionUI.pedirConfirmacion}"
+                                                 process="@form" update=":growl :formConfirmarDevolucion" />
+                            </div>
+                        </h:panelGroup>
+
+                    </h:panelGroup>
+                </h:panelGroup>
+
             </p:panel>
         </h:form>
 
@@ -297,6 +408,31 @@
                                      onclick="PF('dlgConfirmarAnular').hide();PF('dlgAnular').show()" />
                     <p:commandButton value="Sí, rescatar piezas" icon="pi pi-undo"
                                      actionListener="#{mermaUI.anular}"
+                                     process="@this" update=":growl :formMermas" />
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <!-- ===== Confirmar devolución ===== -->
+        <p:dialog widgetVar="dlgConfirmarDevolucion" header="Confirmar devolución" modal="true"
+                  resizable="false" draggable="false" width="460" styleClass="dialogo-merma">
+            <h:form id="formConfirmarDevolucion">
+                <h:panelGroup layout="block" styleClass="texto-confirmar">
+                    <p>#{devolucionUI.mensajeConfirmacion}</p>
+                    <p>Se reembolsa al cliente:
+                        <b><h:outputText value="#{devolucionUI.montoReembolso}">
+                            <f:convertNumber pattern="$#,##0.00" />
+                        </h:outputText></b></p>
+                    <p>Regresan al inventario: <b>#{devolucionUI.piezasRevendibles}</b> pieza(s)</p>
+                    <h:panelGroup layout="block" rendered="#{devolucionUI.piezasNoRevendibles gt 0}">
+                        <p>Se registran como merma: <b>#{devolucionUI.piezasNoRevendibles}</b> pieza(s)</p>
+                    </h:panelGroup>
+                </h:panelGroup>
+                <div class="dialogo-botones">
+                    <p:commandButton value="Cancelar" styleClass="ui-button-flat" type="button"
+                                     onclick="PF('dlgConfirmarDevolucion').hide()" />
+                    <p:commandButton value="Sí, registrar" icon="pi pi-check"
+                                     actionListener="#{devolucionUI.registrar}"
                                      process="@this" update=":growl :formMermas" />
                 </div>
             </h:form>
