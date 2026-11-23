@@ -56,8 +56,8 @@ public class DelegateReportes {
         Instant hasta = periodo.hasta(zona());
         Object[] noCompletadas = dao().ventasNoCompletadas(desde, hasta);
         ReporteVentas reporte = CalculoReportes.ventas(periodo, zona(), filasVenta(desde, hasta),
-                filasPago(desde, hasta), filasVendido(desde, hasta), cantidad(noCompletadas),
-                monto(noCompletadas));
+                filasDevolucion(desde, hasta), filasPago(desde, hasta), vendidosNetos(desde, hasta),
+                cantidad(noCompletadas), monto(noCompletadas));
         List<CalculoReportes.FilaLinea> lineas = filasLinea(desde, hasta);
         List<ReporteVentas.Ticket> tickets = CalculoReportes.tickets(zona(), lineas, filasMetodo(desde, hasta));
         asignarClientes(tickets, desde, hasta);
@@ -97,14 +97,10 @@ public class DelegateReportes {
     public ReporteGanancia ganancia(PeriodoReporte periodo) {
         Instant desde = periodo.desde(zona());
         Instant hasta = periodo.hasta(zona());
-        List<FilaCosto> costos = new ArrayList<>();
-        for (Object[] f : dao().costoVendidoPorProducto(desde, hasta)) {
-            costos.add(new FilaCosto((Integer) f[0], (BigDecimal) f[1]));
-        }
         Object[] noCompletadas = dao().ventasNoCompletadas(desde, hasta);
-        return CalculoReportes.ganancia(periodo, filasVenta(desde, hasta), filasVendido(desde, hasta), costos,
-                filasPago(desde, hasta), dao().mermasNetas(desde, hasta), cantidad(noCompletadas),
-                monto(noCompletadas));
+        return CalculoReportes.ganancia(periodo, filasVenta(desde, hasta), filasDevolucion(desde, hasta),
+                vendidosNetos(desde, hasta), costosNetos(desde, hasta), filasPago(desde, hasta),
+                dao().mermasNetas(desde, hasta), cantidad(noCompletadas), monto(noCompletadas));
     }
 
     /** Informe del mes; la categoría y el proveedor son filtros opcionales (null = todos). */
@@ -120,12 +116,76 @@ public class DelegateReportes {
                     p.getIdProveedor() == null ? null : p.getIdProveedor().getNombre(),
                     Boolean.TRUE.equals(p.getActivo()), p.getStockMinimo(), p.getStockMaximo()));
         }
-        Acumulado alInicio = new Acumulado(dao().recibidasAntesDe(desde), dao().vendidasAntesDe(desde),
+        Acumulado alInicio = new Acumulado(dao().recibidasAntesDe(desde), vendidasNetasAntesDe(desde),
                 dao().mermadasAntesDe(desde));
-        Acumulado alFinal = new Acumulado(dao().recibidasAntesDe(hasta), dao().vendidasAntesDe(hasta),
+        Acumulado alFinal = new Acumulado(dao().recibidasAntesDe(hasta), vendidasNetasAntesDe(hasta),
                 dao().mermadasAntesDe(hasta));
         Map<Integer, Long> actual = dao().existenciaActual();
         return CalculoReportes.inventario(periodo, productos, alInicio, alFinal, actual, idCategoria, idProveedor);
+    }
+
+    /* ======================== devoluciones ======================== */
+
+    /** Piezas vendidas hasta el instante, sin las que se devolvieron (revendibles o mermadas). */
+    private Map<Integer, Long> vendidasNetasAntesDe(Instant corte) {
+        Map<Integer, Long> netas = new java.util.HashMap<>(dao().vendidasAntesDe(corte));
+        for (Map.Entry<Integer, Long> d : dao().devueltasAntesDe(corte).entrySet()) {
+            netas.merge(d.getKey(), -d.getValue(), Long::sum);
+        }
+        return netas;
+    }
+
+    /** Lo vendido por producto menos lo devuelto en el mismo periodo (piezas y dinero). */
+    private List<FilaVendido> vendidosNetos(Instant desde, Instant hasta) {
+        Map<Integer, FilaVendido> netos = new java.util.LinkedHashMap<>();
+        for (FilaVendido f : filasVendido(desde, hasta)) {
+            netos.put(f.idProducto(), f);
+        }
+        for (Object[] r : dao().devueltosPorProducto(desde, hasta)) {
+            Integer id = (Integer) r[0];
+            long piezas = ((Number) r[5]).longValue();
+            BigDecimal dinero = r[6] == null ? BigDecimal.ZERO : (BigDecimal) r[6];
+            FilaVendido v = netos.get(id);
+            if (v == null) {
+                v = new FilaVendido(id, (String) r[1], (String) r[2], (Integer) r[3], (String) r[4],
+                        0, BigDecimal.ZERO);
+            }
+            BigDecimal ingreso = (v.ingreso() == null ? BigDecimal.ZERO : v.ingreso()).subtract(dinero);
+            netos.put(id, new FilaVendido(id, v.codigo(), v.producto(), v.idCategoria(), v.categoria(),
+                    v.piezas() - piezas, ingreso));
+        }
+        List<FilaVendido> filas = new ArrayList<>();
+        for (FilaVendido f : netos.values()) {
+            if (f.piezas() != 0 || (f.ingreso() != null && f.ingreso().signum() != 0)) {
+                filas.add(f);
+            }
+        }
+        return filas;
+    }
+
+    /** Costo de lo vendido por producto menos el costo de las piezas devueltas. */
+    private List<FilaCosto> costosNetos(Instant desde, Instant hasta) {
+        Map<Integer, BigDecimal> costos = new java.util.LinkedHashMap<>();
+        for (Object[] f : dao().costoVendidoPorProducto(desde, hasta)) {
+            costos.put((Integer) f[0], f[1] == null ? BigDecimal.ZERO : (BigDecimal) f[1]);
+        }
+        for (Object[] f : dao().costoDevueltoPorProducto(desde, hasta)) {
+            BigDecimal devuelto = f[1] == null ? BigDecimal.ZERO : (BigDecimal) f[1];
+            costos.merge((Integer) f[0], devuelto.negate(), BigDecimal::add);
+        }
+        List<FilaCosto> filas = new ArrayList<>();
+        for (Map.Entry<Integer, BigDecimal> e : costos.entrySet()) {
+            filas.add(new FilaCosto(e.getKey(), e.getValue()));
+        }
+        return filas;
+    }
+
+    private List<FilaVenta> filasDevolucion(Instant desde, Instant hasta) {
+        List<FilaVenta> filas = new ArrayList<>();
+        for (Object[] f : dao().devoluciones(desde, hasta)) {
+            filas.add(new FilaVenta((Instant) f[0], (BigDecimal) f[1]));
+        }
+        return filas;
     }
 
     /* ======================== conversión de filas ======================== */

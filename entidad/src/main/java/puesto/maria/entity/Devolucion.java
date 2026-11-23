@@ -3,6 +3,8 @@ package puesto.maria.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -33,7 +35,7 @@ public class Devolucion {
     @Column(name = "monto_reembolsado", nullable = false, precision = 12, scale = 2)
     private BigDecimal montoReembolsado;
 
-    @Lob
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
     @Column(name = "motivo")
     private String motivo;
 

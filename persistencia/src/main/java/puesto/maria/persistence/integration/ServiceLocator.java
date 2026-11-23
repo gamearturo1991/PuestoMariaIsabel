@@ -27,6 +27,7 @@ public class ServiceLocator {
     private static ClienteDAO clienteDAO;
     private static BitacoraDAO bitacoraDAO;
     private static ReporteDAO reporteDAO;
+    private static DevolucionDAO devolucionDAO;
 
     private static EntityManager getEntityManager(){
         return HibernateUtil.getEntityManager();
@@ -141,6 +142,13 @@ public class ServiceLocator {
             reporteDAO = new ReporteDAO(getEntityManager());
         }
         return reporteDAO;
+    }
+
+    public static DevolucionDAO getInstanceDevolucionDAO(){
+        if(devolucionDAO == null){
+            devolucionDAO = new DevolucionDAO(getInstanceProductoDAO().getEntityManager());
+        }
+        return devolucionDAO;
     }
 
 }

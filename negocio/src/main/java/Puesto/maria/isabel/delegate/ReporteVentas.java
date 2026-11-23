@@ -204,6 +204,8 @@ public class ReporteVentas implements Serializable {
     private final int ventasNoCompletadas;
     private final BigDecimal montoNoCompletadas;
     private List<Ticket> tickets = new ArrayList<>();
+    private int devoluciones;
+    private BigDecimal montoDevoluciones = BigDecimal.ZERO;
 
     public ReporteVentas(PeriodoReporte periodo, int numeroVentas, long piezas, BigDecimal totalVendido,
                          BigDecimal ticketPromedio, List<Dia> dias, List<Metodo> metodos,
@@ -235,6 +237,14 @@ public class ReporteVentas implements Serializable {
     /** Ventas del periodo que no están completadas (anuladas): no suman a lo vendido. */
     public int getVentasNoCompletadas() { return ventasNoCompletadas; }
     public BigDecimal getMontoNoCompletadas() { return montoNoCompletadas; }
+
+    /** Devoluciones registradas en el periodo: ya están restadas de lo vendido, las piezas y los totales. */
+    public int getDevoluciones() { return devoluciones; }
+    public BigDecimal getMontoDevoluciones() { return montoDevoluciones; }
+    public void setDevoluciones(int devoluciones, BigDecimal montoDevoluciones) {
+        this.devoluciones = devoluciones;
+        this.montoDevoluciones = montoDevoluciones;
+    }
 
     /** Ventas completadas del periodo, una por ticket, de la más reciente a la más antigua. */
     public List<Ticket> getTickets() { return tickets; }
