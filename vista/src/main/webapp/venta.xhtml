@@ -49,6 +49,7 @@
                             <p:selectOneMenu value="#{ventaUI.clienteSeleccionado}" style="width: 100%;">
                                 <f:selectItem itemLabel="Cliente: Público en general" itemValue="#{null}" noSelectionOption="true" />
                                 <f:selectItems value="#{ventaUI.clientes}" var="c" itemLabel="#{c.nombre}" itemValue="#{c}" />
+                                <p:ajax event="change" process="@this" />
                             </p:selectOneMenu>
                         </div>
                     </div>

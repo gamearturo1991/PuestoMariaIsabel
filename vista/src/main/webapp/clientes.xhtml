@@ -1,0 +1,248 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html>
+<ui:composition template="/WEB-INF/templates/layout.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui">
+
+    <ui:define name="titulo">Clientes y facturación</ui:define>
+
+    <ui:define name="head">
+        <h:outputStylesheet name="productos.css" />
+    </ui:define>
+
+    <ui:define name="contenido">
+
+        <p:growl id="growl" showDetail="true" life="5000" />
+
+        <h:form id="formVista">
+            <p:selectOneButton value="#{clienteUI.vista}">
+                <f:selectItem itemLabel="Clientes" itemValue="CLIENTES" />
+                <f:selectItem itemLabel="Facturación mensual" itemValue="FACTURACION" />
+                <p:ajax listener="#{clienteUI.cambiarVista}" update=":contenidoVista :growl" />
+            </p:selectOneButton>
+        </h:form>
+
+        <h:panelGroup id="contenidoVista" layout="block">
+        <h:panelGroup layout="block" rendered="#{clienteUI.vista eq 'CLIENTES'}">
+        <h:form id="formTabla">
+            <div class="productos-barra">
+                <p:inputText id="buscar" value="#{clienteUI.filtro}" placeholder="Buscar por nombre o RFC"
+                             style="width:260px">
+                    <p:ajax event="keyup" delay="300" update="tabla" />
+                </p:inputText>
+                <span class="espacio" />
+                <p:commandButton value="Nuevo cliente" icon="pi pi-plus"
+                                 actionListener="#{clienteUI.nuevo}"
+                                 process="@this" update=":dlgCli"
+                                 oncomplete="PF('dlgCliente').show()" />
+            </div>
+
+            <p:dataTable id="tabla" value="#{clienteUI.clientesFiltrados}" var="cl"
+                         rowKey="#{cl.id}" tableStyle="table-layout:auto;width:100%"
+                         styleClass="tabla-productos"
+                         rowStyleClass="#{cl.activo ? '' : 'fila-deshabilitada'}"
+                         emptyMessage="Todavía no hay clientes">
+
+                <p:column headerText="Nombre o razón social" sortBy="#{cl.nombre}">
+                    <h:outputText value="#{cl.nombre}" />
+                </p:column>
+                <p:column headerText="RFC" sortBy="#{cl.rfc}">
+                    <h:outputText value="#{cl.rfc}" />
+                </p:column>
+                <p:column headerText="Régimen fiscal">
+                    <h:outputText value="#{cl.regimenFiscal}" />
+                </p:column>
+                <p:column headerText="Estado">
+                    <h:outputText value="#{cl.activo ? 'Activo' : 'Inactivo'}"
+                                  styleClass="estado #{cl.activo ? 'estado-activo' : 'estado-baja'}" />
+                </p:column>
+                <p:column headerText="Acciones" styleClass="col-acciones">
+                    <p:commandButton icon="pi pi-pencil" title="Modificar nombre o régimen"
+                                     styleClass="rounded-button ui-button-flat"
+                                     actionListener="#{clienteUI.editar(cl)}"
+                                     process="@this" update=":dlgCli"
+                                     oncomplete="PF('dlgCliente').show()" />
+                    <p:commandButton icon="pi pi-history" title="Ver nombres anteriores"
+                                     styleClass="rounded-button ui-button-flat"
+                                     actionListener="#{clienteUI.verHistorial(cl)}"
+                                     process="@this" update=":dlgHist :growl"
+                                     oncomplete="PF('dlgHistorial').show()" />
+                    <p:commandButton icon="#{cl.activo ? 'pi pi-ban' : 'pi pi-check-circle'}"
+                                     title="#{cl.activo ? 'Desactivar' : 'Activar'}"
+                                     styleClass="rounded-button ui-button-flat"
+                                     actionListener="#{clienteUI.cambiarEstado(cl)}"
+                                     process="@this" update="tabla :growl" />
+                </p:column>
+            </p:dataTable>
+        </h:form>
+        </h:panelGroup>
+
+        <!-- ===== Facturación mensual ===== -->
+        <h:panelGroup layout="block" rendered="#{clienteUI.vista eq 'FACTURACION'}">
+        <h:form id="formFact">
+            <div class="productos-barra">
+                <h:outputText value="Mes:" style="margin-right:8px" />
+                <p:selectOneMenu value="#{clienteUI.mes}" style="width:160px;margin-right:8px">
+                    <f:selectItems value="#{clienteUI.meses}" />
+                    <p:ajax listener="#{clienteUI.cargarFacturacion}" update="tablaFact :growl" />
+                </p:selectOneMenu>
+                <p:selectOneMenu value="#{clienteUI.anio}" style="width:110px">
+                    <f:selectItems value="#{clienteUI.anios}" />
+                    <p:ajax listener="#{clienteUI.cargarFacturacion}" update="tablaFact :growl" />
+                </p:selectOneMenu>
+            </div>
+
+            <p:dataTable id="tablaFact" value="#{clienteUI.facturacion}" var="fa"
+                         tableStyle="table-layout:auto;width:100%" styleClass="tabla-productos"
+                         emptyMessage="Ningún cliente compró en este mes">
+                <p:column headerText="Cliente">
+                    <h:outputText value="#{fa.nombre}" />
+                    <h:outputText value=" (inactivo)" rendered="#{not fa.clienteActivo}" styleClass="estado-baja" />
+                </p:column>
+                <p:column headerText="RFC">
+                    <h:outputText value="#{fa.rfc}" />
+                </p:column>
+                <p:column headerText="Tickets" styleClass="num">
+                    <h:outputText value="#{fa.tickets}" />
+                </p:column>
+                <p:column headerText="Total del mes" styleClass="num">
+                    <h:outputText value="#{fa.total}"><f:convertNumber pattern="$#,##0.00" /></h:outputText>
+                    <ui:fragment rendered="#{fa.totalCambio}">
+                        <i class="pi pi-exclamation-triangle" style="color:#B26A00;margin-left:6px"
+                           title="El total cambió desde que se facturó (se facturó por #{fa.totalFacturado})" />
+                    </ui:fragment>
+                </p:column>
+                <p:column headerText="Facturado" style="text-align:center">
+                    <p:selectBooleanCheckbox value="#{fa.facturada}"
+                                             disabled="#{fa.facturada or not fa.puedeFacturar}">
+                        <p:ajax listener="#{clienteUI.alMarcar(fa)}" process="@this" update=":dlgFac"
+                                oncomplete="PF('dlgFactura').show()" />
+                    </p:selectBooleanCheckbox>
+                </p:column>
+                <p:column headerText="Fecha">
+                    <h:outputText value="#{fa.fechaFactura}" />
+                </p:column>
+                <p:column headerText="Folio fiscal">
+                    <h:outputText value="#{fa.folioFiscal}" />
+                </p:column>
+                <p:column headerText="Acciones" styleClass="col-acciones">
+                    <p:commandButton value="Deshacer factura" icon="pi pi-undo"
+                                     styleClass="ui-button-flat ui-button-danger"
+                                     disabled="#{not fa.facturada}"
+                                     actionListener="#{clienteUI.prepararDeshacer(fa)}"
+                                     process="@this" update=":dlgDes"
+                                     oncomplete="PF('dlgDeshacer').show()" />
+                </p:column>
+            </p:dataTable>
+        </h:form>
+        </h:panelGroup>
+        </h:panelGroup>
+
+        <!-- ===== Marcar como facturado ===== -->
+        <p:dialog id="dlgFac" widgetVar="dlgFactura" modal="true" resizable="false" draggable="false"
+                  header="Marcar como facturado" width="460" closable="false" closeOnEscape="false">
+            <h:form id="formFac">
+                <p:outputPanel rendered="#{clienteUI.filaSeleccionada != null}">
+                    <p><b>#{clienteUI.filaSeleccionada.nombre}</b> · #{clienteUI.filaSeleccionada.rfc}</p>
+                    <p>#{clienteUI.tituloMes}: total
+                        <b><h:outputText value="#{clienteUI.filaSeleccionada.total}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></b></p>
+                    <div class="form-grid">
+                        <p:outputLabel for="folioFiscal" value="Folio fiscal" />
+                        <p:inputText id="folioFiscal" value="#{clienteUI.folioFiscal}" maxlength="100"
+                                     placeholder="Folio de la factura (UUID)" />
+                    </div>
+                    <small>Una vez marcado no se puede quitar directo: hay que usar «Deshacer factura» y dar un motivo.</small>
+                </p:outputPanel>
+                <div class="dialogo-botones">
+                    <p:commandButton value="Cancelar" styleClass="ui-button-flat"
+                                     actionListener="#{clienteUI.cancelarFactura}"
+                                     process="@this" update=":formFact:tablaFact"
+                                     oncomplete="PF('dlgFactura').hide()" />
+                    <p:commandButton value="Marcar como facturado" icon="pi pi-check"
+                                     actionListener="#{clienteUI.confirmarFactura}"
+                                     process="@form" update="formFac :formFact:tablaFact :growl"
+                                     oncomplete="if (args &amp;&amp; args.guardado) PF('dlgFactura').hide()" />
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <!-- ===== Deshacer factura ===== -->
+        <p:dialog id="dlgDes" widgetVar="dlgDeshacer" modal="true" resizable="false" draggable="false"
+                  header="Deshacer factura" width="460" closeOnEscape="true">
+            <h:form id="formDes">
+                <p:outputPanel rendered="#{clienteUI.filaSeleccionada != null}">
+                    <p><b>#{clienteUI.filaSeleccionada.nombre}</b> · #{clienteUI.tituloMes}</p>
+                    <p>Folio fiscal: #{clienteUI.filaSeleccionada.folioFiscal}</p>
+                    <div class="form-grid">
+                        <p:outputLabel for="motivo" value="Motivo" />
+                        <p:inputTextarea id="motivo" value="#{clienteUI.motivo}" rows="3" maxlength="500"
+                                         placeholder="¿Por qué se deshace la factura?" />
+                    </div>
+                </p:outputPanel>
+                <div class="dialogo-botones">
+                    <p:commandButton value="Cancelar" styleClass="ui-button-flat" type="button"
+                                     onclick="PF('dlgDeshacer').hide()" />
+                    <p:commandButton value="Deshacer factura" icon="pi pi-undo" styleClass="ui-button-danger"
+                                     actionListener="#{clienteUI.confirmarDeshacer}"
+                                     process="@form" update="formDes :formFact:tablaFact :growl"
+                                     oncomplete="if (args &amp;&amp; args.guardado) PF('dlgDeshacer').hide()" />
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <!-- ===== Formulario: registrar / modificar ===== -->
+        <p:dialog id="dlgCli" widgetVar="dlgCliente" modal="true" resizable="false" draggable="false"
+                  header="#{clienteUI.cliente.id == null ? 'Nuevo cliente' : 'Modificar cliente'}"
+                  width="520" closeOnEscape="true">
+            <h:form id="formDialogo">
+                <div class="form-grid">
+                    <p:outputLabel for="nombre" value="Nombre o razón social" />
+                    <p:inputText id="nombre" value="#{clienteUI.cliente.nombre}" maxlength="255" />
+
+                    <p:outputLabel for="rfc" value="RFC" />
+                    <p:inputText id="rfc" value="#{clienteUI.cliente.rfc}" maxlength="13"
+                                 disabled="#{clienteUI.cliente.id != null}"
+                                 style="text-transform:uppercase"
+                                 placeholder="12 o 13 caracteres" />
+
+                    <p:outputLabel for="regimen" value="Régimen fiscal" />
+                    <p:selectOneMenu id="regimen" value="#{clienteUI.cliente.regimenFiscal}" style="width:100%">
+                        <f:selectItem itemLabel="Elige un régimen" itemValue="#{null}" noSelectionOption="true" />
+                        <f:selectItems value="#{clienteUI.regimenes}" />
+                    </p:selectOneMenu>
+                </div>
+                <p:outputPanel rendered="#{clienteUI.cliente.id != null}">
+                    <small>El RFC no se puede cambiar. Si cambias el nombre o el régimen, las ventas anteriores
+                        conservan los que tenía el cliente en ese momento.</small>
+                </p:outputPanel>
+                <div class="dialogo-botones">
+                    <p:commandButton value="Cancelar" styleClass="ui-button-flat" type="button"
+                                     onclick="PF('dlgCliente').hide()" />
+                    <p:commandButton value="Guardar" icon="pi pi-check"
+                                     actionListener="#{clienteUI.guardar}"
+                                     process="@form" update="formDialogo :formTabla:tabla :growl"
+                                     oncomplete="if (args &amp;&amp; args.guardado) PF('dlgCliente').hide()" />
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <!-- ===== Nombres anteriores ===== -->
+        <p:dialog id="dlgHist" widgetVar="dlgHistorial" modal="true" resizable="false" draggable="false"
+                  header="Nombres del cliente" width="420" closeOnEscape="true">
+            <p:outputPanel>
+                <p>RFC: <b>#{clienteUI.clienteHistorial.rfc}</b></p>
+                <ol>
+                    <ui:repeat value="#{clienteUI.nombresHistorial}" var="n">
+                        <li>#{n}</li>
+                    </ui:repeat>
+                </ol>
+                <small>El último de la lista es el nombre actual.</small>
+            </p:outputPanel>
+        </p:dialog>
+
+    </ui:define>
+
+</ui:composition>
