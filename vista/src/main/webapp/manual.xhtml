@@ -27,7 +27,7 @@
                 <a href="#proveedores">6. Proveedores</a>
                 <a href="#entradas">7. Entradas de mercancía</a>
                 <a href="#inventario">8. Inventario y alertas</a>
-                <a href="#mermas">9. Mermas</a>
+                <a href="#mermas">9. Mermas y devoluciones</a>
                 <a href="#clientes">10. Clientes y facturación</a>
                 <a href="#reportes">11. Reportes</a>
                 <a href="#bitacora">12. Bitácora</a>
@@ -134,7 +134,9 @@
             <p>Puedes buscar por código o nombre y filtrar por estado. Al iniciar sesión se muestra un aviso con los productos que necesitan reposición.</p>
 
             <!-- ============================ 9 ============================ -->
-            <h2 id="mermas">9. Mermas</h2>
+            <h2 id="mermas">9. Mermas y devoluciones</h2>
+            <p>Esta pantalla tiene tres pestañas: <i>Registrar merma</i>, <i>Historial de mermas</i> y <i>Devoluciones</i>.</p>
+            <h3>Mermas</h3>
             <p>Una merma es producto que se pierde y sale del inventario.</p>
             <ol>
                 <li>En <i>Registrar merma</i> elige el producto, las piezas y el <b>motivo</b>: <i>Empaque dañado</i>, <i>Caducado</i>, <i>Consumo propio</i> o <i>Faltante o pérdida de logística</i>.</li>
@@ -144,7 +146,24 @@
                 <li><b>Anular una merma</b> (en el <i>Historial de mermas</i>): si se capturó por error, rescatas las piezas indicando cuántas y describiendo el error. Las piezas regresan al inventario.</li>
                 <li>El historial se consulta por periodo (<i>Desde</i> y <i>Hasta</i>) y por motivo; el botón <i>Mes actual</i> lo deja en el mes en curso.</li>
             </ul>
-            <p class="manual-pendiente">El registro de devoluciones de clientes todavía está en desarrollo.</p>
+
+            <h3>Devoluciones</h3>
+            <p>Se usan cuando un cliente regresa producto de una venta y hay que devolverle su dinero.</p>
+            <ol>
+                <li>Abre la pestaña <b>Devoluciones</b>, escribe el <b>folio de la venta</b> (el número del ticket, por ejemplo 7) y pulsa <b>Continuar</b>.</li>
+                <li>Se muestran la fecha, quién atendió, el total y los productos de la venta, con las piezas vendidas y las que ya se devolvieron antes. Solo se pueden devolver ventas completadas.</li>
+                <li>Elige <b>Toda la venta</b> o <b>Solo algunos productos</b>. En el segundo caso captura en <i>Devolver</i> cuántas piezas regresan de cada producto; no puedes pasar de las que quedan por devolver.</li>
+                <li>En cada producto indica si <b>se puede revender</b>. Si la casilla está marcada, las piezas regresan al inventario. Si no (producto abierto, dañado, etc.), no regresan: se registran como merma con el motivo <i>Devolución no revendible</i>.</li>
+                <li>Revisa el resumen: piezas a devolver, <b>cantidad a reembolsar</b> y cuántas piezas irán a merma.</li>
+                <li>Escribe el <b>motivo</b> de la devolución (es obligatorio), pulsa <b>Registrar devolución</b> y confirma en la ventana con <b>Sí, registrar</b>.</li>
+            </ol>
+            <ul>
+                <li>El sistema calcula cuánto reembolsar con el precio al que se vendió cada producto, pero <b>no entrega el dinero</b>: eso lo haces tú con el cliente.</li>
+                <li>Una venta puede devolverse en partes, en varias devoluciones. Cuando ya no queda nada por devolver, el sistema lo avisa.</li>
+                <li>La devolución queda en la bitácora con tu usuario, el monto y el motivo. Las piezas no revendibles también aparecen en el <i>Historial de mermas</i>.</li>
+                <li>Una devolución se registra completa o no se registra: si algo falla, no se guarda nada a medias.</li>
+            </ul>
+            <div class="manual-nota">En los reportes, una devolución se resta en el periodo en que la registraste, no en el de la venta original. Los tickets y el desglose por método de pago siguen mostrando lo que se cobró en su momento.</div>
 
             <!-- ============================ 10 ============================ -->
             <h2 id="clientes">10. Clientes y facturación</h2>
@@ -173,6 +192,7 @@
                 <li><b>Ingresos y ganancia:</b> ingresos, costo de lo vendido, mermas y comisiones de tarjeta; de ahí sale la ganancia neta.</li>
                 <li><b>Estado e inventario:</b> existencia al inicio y al final del mes, lo recibido, lo vendido y la rotación de cada producto. La rotación indica cuántas veces se renovó el inventario: piezas vendidas entre el promedio de existencia.</li>
             </ul>
+            <p>Las devoluciones se restan del total vendido, de las piezas y de los ingresos del periodo en que se registraron; una nota en la pantalla indica cuántas hubo y por cuánto.</p>
             <p>El botón <b>Imprimir</b> genera la versión para imprimir o guardar como PDF.</p>
 
             <!-- ============================ 12 ============================ -->
@@ -206,6 +226,10 @@
             <p>Si ya tiene productos o entradas, no se elimina: desactiva al proveedor. En el caso de una categoría, cambia antes sus productos a otra.</p>
             <h3>Me equivoqué al registrar una merma.</h3>
             <p>Anúlala desde el historial de mermas, indicando cuántas piezas rescatar y qué error hubo.</p>
+            <h3>Un cliente quiere devolver un producto.</h3>
+            <p>Ve a <b>Mermas y devoluciones → Devoluciones</b>, busca la venta por su folio y sigue los pasos de la sección 9. Si no recuerdas el folio, búscalo en <b>Reportes → Tickets</b>.</p>
+            <h3>No me deja devolver más piezas de una venta.</h3>
+            <p>Ya se devolvieron todas, o parte de ellas, en una devolución anterior. La columna <i>Ya devueltas</i> muestra cuántas.</p>
             <h3>Marqué como facturado a un cliente por error.</h3>
             <p>Usa <b>Deshacer factura</b> en Clientes y facturación y escribe el motivo.</p>
             <h3>El cliente cambió de nombre o de régimen.</h3>
