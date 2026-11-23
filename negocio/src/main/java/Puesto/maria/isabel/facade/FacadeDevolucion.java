@@ -7,6 +7,7 @@ import puesto.maria.entity.Venta;
 import puesto.maria.persistence.dao.LineaDevolucion;
 
 import java.util.List;
+import java.util.Map;
 
 public class FacadeDevolucion {
 
@@ -18,6 +19,10 @@ public class FacadeDevolucion {
 
     public List<DetalleVenta> detallesDeVenta(Integer folio) {
         return delegateDevolucion.detallesDeVenta(folio);
+    }
+
+    public Map<Integer, Long> devueltasPorDetalle(Integer folio) {
+        return delegateDevolucion.devueltasPorDetalle(folio);
     }
 
     public Devolucion registrarDevolucion(Integer folio, String motivo, Integer idUsuario,

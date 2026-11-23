@@ -59,6 +59,8 @@ public class ReporteGanancia implements Serializable {
     private final int ventasNoCompletadas;
     private final BigDecimal montoNoCompletadas;
     private final boolean sinMovimientos;
+    private int devoluciones;
+    private BigDecimal montoDevoluciones = BigDecimal.ZERO;
 
     public ReporteGanancia(PeriodoReporte periodo, BigDecimal ingresos, BigDecimal costoVendido,
                            BigDecimal mermas, BigDecimal comisiones, BigDecimal margen,
@@ -96,6 +98,13 @@ public class ReporteGanancia implements Serializable {
     public List<Linea> getProductos() { return productos; }
     public int getVentasNoCompletadas() { return ventasNoCompletadas; }
     public BigDecimal getMontoNoCompletadas() { return montoNoCompletadas; }
+    /** Devoluciones registradas en el periodo: ya están restadas de los ingresos y del costo de lo vendido. */
+    public int getDevoluciones() { return devoluciones; }
+    public BigDecimal getMontoDevoluciones() { return montoDevoluciones; }
+    public void setDevoluciones(int devoluciones, BigDecimal montoDevoluciones) {
+        this.devoluciones = devoluciones;
+        this.montoDevoluciones = montoDevoluciones;
+    }
     /** True si en el periodo no hubo ventas, mermas ni comisiones. */
     public boolean isSinMovimientos() { return sinMovimientos; }
 }

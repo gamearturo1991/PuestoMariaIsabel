@@ -64,8 +64,12 @@ public final class CalculoReportes {
 
     /* ======================== ventas por periodo ======================== */
 
+    /**
+     * @param devoluciones devoluciones registradas en el periodo (fecha y dinero reembolsado): se restan del
+     *                     total vendido y del total de su día. Las piezas y productos ya vienen sin lo devuelto.
+     */
     public static ReporteVentas ventas(PeriodoReporte periodo, ZoneId zona, List<FilaVenta> ventas,
-                                       List<FilaPago> pagos, List<FilaVendido> vendidos,
+                                       List<FilaVenta> devoluciones, List<FilaPago> pagos, List<FilaVendido> vendidos,
                                        int noCompletadas, BigDecimal montoNoCompletadas) {
         BigDecimal total = BigDecimal.ZERO;
         Map<LocalDate, int[]> cuentaDia = new LinkedHashMap<>();
@@ -81,6 +85,16 @@ public final class CalculoReportes {
             if (cuentaDia.containsKey(dia)) {
                 cuentaDia.get(dia)[0]++;
                 totalDia.merge(dia, t, BigDecimal::add);
+            }
+        }
+        BigDecimal reembolsado = BigDecimal.ZERO;
+        for (FilaVenta dev : devoluciones) {
+            BigDecimal t = dinero(dev.total());
+            reembolsado = reembolsado.add(t);
+            total = total.subtract(t);
+            LocalDate dia = dev.fecha().atZone(zona).toLocalDate();
+            if (totalDia.containsKey(dia)) {
+                totalDia.merge(dia, t.negate(), BigDecimal::add);
             }
         }
         List<ReporteVentas.Dia> dias = new ArrayList<>();
@@ -128,20 +142,32 @@ public final class CalculoReportes {
 
         int n = ventas.size();
         BigDecimal ticket = n == 0 ? BigDecimal.ZERO : total.divide(new BigDecimal(n), 2, RoundingMode.HALF_UP);
-        return new ReporteVentas(periodo, n, piezas, total, ticket, dias, metodos, categorias, productos,
-                noCompletadas, dinero(montoNoCompletadas));
+        ReporteVentas reporte = new ReporteVentas(periodo, n, piezas, total, ticket, dias, metodos, categorias,
+                productos, noCompletadas, dinero(montoNoCompletadas));
+        reporte.setDevoluciones(devoluciones.size(), reembolsado);
+        return reporte;
     }
 
     /* ======================== ingresos y ganancia neta ======================== */
 
+    /**
+     * @param devoluciones devoluciones del periodo: lo reembolsado se resta de los ingresos. Los productos y
+     *                     costos ya vienen sin lo devuelto (el costo de las piezas devueltas no cuenta como
+     *                     costo de lo vendido: si no se pueden revender ya están en las mermas).
+     */
     public static ReporteGanancia ganancia(PeriodoReporte periodo, List<FilaVenta> ventas,
-                                           List<FilaVendido> vendidos, List<FilaCosto> costos,
+                                           List<FilaVenta> devoluciones, List<FilaVendido> vendidos, List<FilaCosto> costos,
                                            List<FilaPago> pagos, BigDecimal mermasNetas,
                                            int noCompletadas, BigDecimal montoNoCompletadas) {
         BigDecimal ingresos = BigDecimal.ZERO;
         for (FilaVenta v : ventas) {
             ingresos = ingresos.add(dinero(v.total()));
         }
+        BigDecimal reembolsado = BigDecimal.ZERO;
+        for (FilaVenta dev : devoluciones) {
+            reembolsado = reembolsado.add(dinero(dev.total()));
+        }
+        ingresos = ingresos.subtract(reembolsado);
         Map<Integer, BigDecimal> costoPorProducto = new LinkedHashMap<>();
         BigDecimal costoTotal = BigDecimal.ZERO;
         for (FilaCosto c : costos) {
@@ -183,16 +209,19 @@ public final class CalculoReportes {
                 : neta.multiply(CIEN).divide(ingresos, 2, RoundingMode.HALF_UP);
 
         List<ReporteGanancia.Concepto> resumen = new ArrayList<>();
-        resumen.add(new ReporteGanancia.Concepto("Ingresos (ventas completadas)", ingresos));
+        resumen.add(new ReporteGanancia.Concepto("Ingresos (ventas completadas menos devoluciones)", ingresos));
         resumen.add(new ReporteGanancia.Concepto("Costo de lo vendido", costoTotal));
         resumen.add(new ReporteGanancia.Concepto("Ganancia bruta", bruta));
         resumen.add(new ReporteGanancia.Concepto("Mermas (neto de anulaciones)", mermas));
         resumen.add(new ReporteGanancia.Concepto("Comisiones de tarjeta", comisiones));
         resumen.add(new ReporteGanancia.Concepto("Ganancia neta", neta));
 
-        boolean sinMovimientos = ventas.isEmpty() && mermas.signum() == 0 && comisiones.signum() == 0;
-        return new ReporteGanancia(periodo, ingresos, costoTotal, mermas, comisiones, margen, resumen,
-                categorias, productos, noCompletadas, dinero(montoNoCompletadas), sinMovimientos);
+        boolean sinMovimientos = ventas.isEmpty() && devoluciones.isEmpty() && mermas.signum() == 0
+                && comisiones.signum() == 0;
+        ReporteGanancia reporte = new ReporteGanancia(periodo, ingresos, costoTotal, mermas, comisiones, margen,
+                resumen, categorias, productos, noCompletadas, dinero(montoNoCompletadas), sinMovimientos);
+        reporte.setDevoluciones(devoluciones.size(), reembolsado);
+        return reporte;
     }
 
     /* ======================== estado y rotación del inventario ======================== */

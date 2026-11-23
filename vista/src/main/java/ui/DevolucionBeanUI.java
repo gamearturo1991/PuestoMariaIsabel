@@ -21,6 +21,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Named("devolucionUI")
 @SessionScoped
@@ -29,18 +30,24 @@ public class DevolucionBeanUI implements Serializable {
     /** Un renglón de la venta con las piezas que se van a devolver. */
     public static class Linea implements Serializable {
         private final DetalleVenta detalle;
+        /** Piezas de este renglón que ya se devolvieron en devoluciones anteriores. */
+        private final int yaDevueltas;
         private Integer cantidad = 0;
         /** True: la pieza regresa al inventario. False: se registra como merma. */
         private boolean revendible = true;
 
-        public Linea(DetalleVenta detalle) {
+        public Linea(DetalleVenta detalle, long yaDevueltas) {
             this.detalle = detalle;
+            this.yaDevueltas = (int) yaDevueltas;
         }
 
         public Integer getIdDetalle() { return detalle.getId(); }
         public String getNombre() { return detalle.getIdProducto().getNombre(); }
         public String getCodigo() { return detalle.getIdProducto().getCodigoCorto(); }
         public int getVendidas() { return detalle.getCantidad(); }
+        public int getYaDevueltas() { return yaDevueltas; }
+        /** Piezas que todavía se pueden devolver de este renglón. */
+        public int getDisponibles() { return Math.max(0, detalle.getCantidad() - yaDevueltas); }
         public BigDecimal getPrecio() { return detalle.getPrecioUnitario(); }
 
         public Integer getCantidad() { return cantidad; }
@@ -78,8 +85,13 @@ public class DevolucionBeanUI implements Serializable {
         try {
             venta = helper.buscarVenta(folio);
             lineas = new ArrayList<>();
+            Map<Integer, Long> devueltas = helper.devueltasPorDetalle(folio);
             for (DetalleVenta d : helper.detallesDeVenta(folio)) {
-                lineas.add(new Linea(d));
+                lineas.add(new Linea(d, devueltas.getOrDefault(d.getId(), 0L)));
+            }
+            if (getPiezasDisponibles() == 0) {
+                mensaje(FacesMessage.SEVERITY_INFO, "Venta ya devuelta",
+                        "Todas las piezas de la venta " + folio + " ya se devolvieron.");
             }
         } catch (IllegalArgumentException ex) {
             venta = null;
@@ -95,7 +107,7 @@ public class DevolucionBeanUI implements Serializable {
     /** Al elegir total se llenan todas las piezas; al elegir parcial se empieza en cero. */
     public void cambiarTipo() {
         for (Linea l : lineas) {
-            l.setCantidad("TOTAL".equals(tipo) ? l.getVendidas() : 0);
+            l.setCantidad("TOTAL".equals(tipo) ? l.getDisponibles() : 0);
         }
     }
 
@@ -114,9 +126,11 @@ public class DevolucionBeanUI implements Serializable {
             return;
         }
         for (Linea l : lineas) {
-            if (l.getCantidad() != null && l.getCantidad() > l.getVendidas()) {
-                mensaje(FacesMessage.SEVERITY_WARN, "Cantidad mayor a la vendida",
-                        "De " + l.getNombre() + " solo se vendieron " + l.getVendidas() + " pieza(s).");
+            if (l.getCantidad() != null && l.getCantidad() > l.getDisponibles()) {
+                mensaje(FacesMessage.SEVERITY_WARN, "Cantidad mayor a la disponible",
+                        "De " + l.getNombre() + " solo se pueden devolver " + l.getDisponibles()
+                                + " pieza(s): se vendieron " + l.getVendidas() + " y ya se devolvieron "
+                                + l.getYaDevueltas() + ".");
                 return;
             }
         }
@@ -203,6 +217,15 @@ public class DevolucionBeanUI implements Serializable {
 
     public BigDecimal getTotalVenta() {
         return venta == null ? BigDecimal.ZERO : venta.getTotal();
+    }
+
+    /** Piezas de la venta que todavía se pueden devolver. */
+    public int getPiezasDisponibles() {
+        int piezas = 0;
+        for (Linea l : lineas) {
+            piezas += l.getDisponibles();
+        }
+        return piezas;
     }
 
     /** Piezas capturadas para devolver, en todos los renglones. */

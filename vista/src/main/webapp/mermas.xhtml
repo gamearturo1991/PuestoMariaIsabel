@@ -270,6 +270,9 @@
                             <p:column headerText="Vendidas" styleClass="num" width="90">
                                 <h:outputText value="#{l.vendidas}" />
                             </p:column>
+                            <p:column headerText="Ya devueltas" styleClass="num" width="100">
+                                <h:outputText value="#{l.yaDevueltas}" />
+                            </p:column>
                             <p:column headerText="Precio" styleClass="num" width="110">
                                 <h:outputText value="#{l.precio}">
                                     <f:convertNumber pattern="$#,##0.00" />
@@ -277,8 +280,8 @@
                             </p:column>
                             <p:column headerText="Devolver" width="120" rendered="#{devolucionUI.tipo != null}">
                                 <p:inputNumber value="#{l.cantidad}" decimalPlaces="0" minValue="0"
-                                               maxValue="#{l.vendidas}"
-                                               disabled="#{devolucionUI.tipo != 'PARCIAL'}">
+                                               maxValue="#{l.disponibles}"
+                                               disabled="#{devolucionUI.tipo != 'PARCIAL' or l.disponibles lt 1}">
                                     <p:ajax event="change" update=":formMermas:montoDev" />
                                 </p:inputNumber>
                             </p:column>

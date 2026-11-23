@@ -8,6 +8,7 @@ import puesto.maria.persistence.dao.ReporteDAO;
 import puesto.maria.persistence.integration.ServiceLocator;
 
 import java.util.List;
+import java.util.Map;
 
 public class DelegateDevolucion {
 
@@ -29,6 +30,11 @@ public class DelegateDevolucion {
 
     public List<DetalleVenta> detallesDeVenta(Integer folio) {
         return ServiceLocator.getInstanceDevolucionDAO().detallesDeVenta(folio);
+    }
+
+    /** Piezas ya devueltas de cada renglón de la venta: id del renglón -> piezas. */
+    public Map<Integer, Long> devueltasPorDetalle(Integer folio) {
+        return ServiceLocator.getInstanceDevolucionDAO().devueltasPorDetalle(folio);
     }
 
     public Devolucion registrarDevolucion(Integer folio, String motivo, Integer idUsuario,

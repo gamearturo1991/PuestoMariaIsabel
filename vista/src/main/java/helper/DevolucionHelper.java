@@ -8,6 +8,7 @@ import puesto.maria.persistence.dao.LineaDevolucion;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 public class DevolucionHelper implements Serializable {
 
@@ -17,6 +18,10 @@ public class DevolucionHelper implements Serializable {
 
     public List<DetalleVenta> detallesDeVenta(Integer folio) {
         return ServiceFacadeLocator.getInstanceFacadeDevolucion().detallesDeVenta(folio);
+    }
+
+    public Map<Integer, Long> devueltasPorDetalle(Integer folio) {
+        return ServiceFacadeLocator.getInstanceFacadeDevolucion().devueltasPorDetalle(folio);
     }
 
     public Devolucion registrar(Integer folio, String motivo, Integer idUsuario,
