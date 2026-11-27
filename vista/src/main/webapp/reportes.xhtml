@@ -23,17 +23,25 @@
         <h:form id="formReportes">
 
             <!-- ===== Pestañas ===== -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <p:selectOneButton id="vista" value="#{reportesUI.vista}" unselectable="false" styleClass="vistas-reporte">
                 <f:selectItem itemLabel="Ventas por periodo" itemValue="VENTAS" />
                 <f:selectItem itemLabel="Tickets" itemValue="TICKETS" />
                 <f:selectItem itemLabel="Ingresos y ganancia" itemValue="GANANCIA" />
                 <f:selectItem itemLabel="Estado e inventario" itemValue="INVENTARIO" />
+                <f:selectItem itemLabel="Corte de Caja" itemValue="CORTE" />
                 <p:ajax listener="#{reportesUI.cambiarVista}" update="formReportes :growl" />
             </p:selectOneButton>
 
+            <p:commandButton value="Corte de Caja"
+                             styleClass="ui-button-warning" style="font-weight:bold;"
+                             actionListener="#{reportesUI.abrirCorteCaja}"
+                             update="dlgCorte :growl"
+                             oncomplete="if (args &amp;&amp; args.mostrar) { PF('dlgCorteCaja').show(); }" />
+            </div>
             <!-- ===== Filtros: ventas e ingresos ===== -->
             <h:panelGroup layout="block" styleClass="filtros-reporte"
-                          rendered="#{reportesUI.vista ne 'INVENTARIO'}">
+                          rendered="#{reportesUI.vista ne 'INVENTARIO' and reportesUI.vista ne 'CORTE'}">
                 <p:outputLabel for="tipo" value="Periodo" />
                 <p:selectOneMenu id="tipo" value="#{reportesUI.tipo}">
                     <f:selectItems value="#{reportesUI.tipos}" var="t" itemValue="#{t}" itemLabel="#{t.etiqueta}" />
@@ -433,6 +441,155 @@
                 </p:dataTable>
             </h:panelGroup>
 
+            <!-- ==================================================================== -->
+            <!--  CONSULTA DE CORTE DE CAJA (HISTÓRICO)                               -->
+            <!-- ==================================================================== -->
+            <h:panelGroup id="areaCorte" layout="block" styleClass="area-reporte"
+                          rendered="#{reportesUI.vista eq 'CORTE'}">
+
+                <h2 class="titulo-reporte">
+                    Corte de Caja · Fecha #{reportesUI.fecha}
+                </h2>
+
+                <h:panelGroup layout="block" styleClass="nota-reporte" rendered="#{reportesUI.corteConsultado eq null}">
+                    No hay ningún corte de caja registrado para esta fecha.
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" rendered="#{reportesUI.corteConsultado ne null}">
+
+                    <div class="nota-reporte nota-suave" style="margin-bottom: 15px;">
+                        <b>Fecha y hora de cierre:</b> #{reportesUI.corteConsultado.fechaHoraCierre}
+                    </div>
+
+                    <table class="tabla-corte">
+                        <thead>
+                        <tr>
+                            <th>Concepto</th>
+                            <th class="num">Monto</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>Efectivo</td>
+                            <td class="num">
+                                <h:outputText value="#{reportesUI.corteConsultado.totalEfectivo}">
+                                    <f:convertNumber pattern="$#,##0.00" />
+                                </h:outputText>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Transferencia</td>
+                            <td class="num">
+                                <h:outputText value="#{reportesUI.corteConsultado.totalTransferencia}">
+                                    <f:convertNumber pattern="$#,##0.00" />
+                                </h:outputText>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Tarjeta</td>
+                            <td class="num">
+                                <h:outputText value="#{reportesUI.corteConsultado.totalTarjeta}">
+                                    <f:convertNumber pattern="$#,##0.00" />
+                                </h:outputText>
+                            </td>
+                        </tr>
+                        <tr class="fila-descuento">
+                            <td>- Comisión descontada</td>
+                            <td class="num">
+                                <h:outputText value="#{reportesUI.corteConsultado.totalComision}">
+                                    <f:convertNumber pattern="$#,##0.00" />
+                                </h:outputText>
+                            </td>
+                        </tr>
+                        <tr class="fila-descuento">
+                            <td>- Devoluciones</td>
+                            <td class="num">
+                                <h:outputText value="#{reportesUI.corteConsultado.totalDevoluciones}">
+                                    <f:convertNumber pattern="$#,##0.00" />
+                                </h:outputText>
+                            </td>
+                        </tr>
+                        <tr class="fila-total-corte">
+                            <td>Total Neto</td>
+                            <td class="num texto-total-neto">
+                                <h:outputText value="#{reportesUI.corteConsultado.totalNeto}">
+                                    <f:convertNumber pattern="$#,##0.00" />
+                                </h:outputText>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </h:panelGroup>
+
+            </h:panelGroup>
+
+            <!-- ===== MODAL DE CORTE DE CAJA ===== -->
+            <p:dialog id="dlgCorte" widgetVar="dlgCorteCaja" header="Corte de Caja"
+                      modal="true" resizable="false" draggable="false" width="450" styleClass="dialogo-cobro">
+                <h:form id="formCorte">
+
+                    <div class="corte-header">
+                        Fecha: <span class="corte-header-value">#{reportesUI.fechaCorte}</span>
+                    </div>
+
+                    <div class="corte-body">
+
+                        <div class="corte-row">
+                            <span class="corte-row-label">Efectivo</span>
+                            <span class="corte-row-value corte-val-efectivo">
+                                <h:outputText value="#{reportesUI.cortePrevisualizacion.totalEfectivo}">
+                                    <f:convertNumber pattern="$#,##0.00" />
+                                </h:outputText>
+                            </span>
+                        </div>
+
+                        <div class="corte-row">
+                            <span class="corte-row-label">Transferencia</span>
+                            <span class="corte-row-value corte-val-transferencia">
+                                <h:outputText value="#{reportesUI.cortePrevisualizacion.totalTransferencia}">
+                                    <f:convertNumber pattern="$#,##0.00" />
+                                </h:outputText>
+                            </span>
+                        </div>
+
+                        <div class="corte-row">
+                            <span class="corte-row-label">Tarjeta</span>
+                            <span class="corte-row-value corte-val-tarjeta">
+                                <h:outputText value="#{reportesUI.cortePrevisualizacion.totalTarjeta}">
+                                    <f:convertNumber pattern="$#,##0.00" />
+                                </h:outputText>
+                            </span>
+                        </div>
+
+                        <!-- Comisión descontada -->
+                        <div class="corte-row corte-row-sin-borde">
+                            <span class="corte-row-label">Comisión descontada</span>
+                            <span class="corte-row-value corte-val-comision">
+                                - <h:outputText value="#{reportesUI.cortePrevisualizacion.totalComision}">
+                                    <f:convertNumber pattern="$#,##0.00" />
+                                </h:outputText>
+                            </span>
+                        </div>
+
+                        <div class="corte-total-box">
+                            <span class="corte-total-label">Total Neto</span>
+                            <span class="corte-total-value">
+                                <h:outputText value="#{reportesUI.cortePrevisualizacion.totalNeto}">
+                                    <f:convertNumber pattern="$#,##0.00" />
+                                </h:outputText>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="corte-footer">
+                        <p:commandButton value="Cancelar" type="button" styleClass="ui-button-flat" onclick="PF('dlgCorteCaja').hide()" />
+                        <p:commandButton value="Confirmar Corte" icon="pi pi-check" styleClass="ui-button-success"
+                                         actionListener="#{reportesUI.confirmarCorte}"
+                                         update=":formReportes :growl" />
+                    </div>
+
+                </h:form>
+            </p:dialog>
         </h:form>
 
     </ui:define>

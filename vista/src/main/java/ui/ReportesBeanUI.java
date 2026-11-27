@@ -17,6 +17,8 @@ import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import puesto.maria.entity.Categoria;
 import puesto.maria.entity.Proveedor;
+import org.primefaces.PrimeFaces;
+import puesto.maria.entity.CorteCaja;
 
 import java.io.ByteArrayInputStream;
 import java.io.Serializable;
@@ -41,6 +43,7 @@ public class ReportesBeanUI implements Serializable {
     public static final String GANANCIA = "GANANCIA";
     public static final String INVENTARIO = "INVENTARIO";
     public static final String TICKETS = "TICKETS";
+    public static final String CORTE = "CORTE";
 
     private static final Locale ES_MX = Locale.forLanguageTag("es-MX");
 
@@ -66,6 +69,9 @@ public class ReportesBeanUI implements Serializable {
     private ReporteVentas ventas;
     private ReporteGanancia ganancia;
     private ReporteInventario inventario;
+    private CorteCaja cortePrevisualizacion;
+    private LocalDate fechaCorte;
+    private CorteCaja corteConsultado;
 
     private List<Categoria> categorias = new ArrayList<>();
     private List<Proveedor> proveedores = new ArrayList<>();
@@ -99,7 +105,10 @@ public class ReportesBeanUI implements Serializable {
     /** Genera el reporte de la pestaña activa con los parámetros elegidos. */
     public void consultar() {
         try {
-            if (GANANCIA.equals(vista)) {
+            if (CORTE.equals(vista)) {
+                corteConsultado = helper.obtenerCorte(fecha);
+            }
+            else if (GANANCIA.equals(vista)) {
                 ganancia = null;
                 ganancia = helper.ganancia(helper.periodo(tipo, fecha));
             } else if (INVENTARIO.equals(vista)) {
@@ -135,6 +144,8 @@ public class ReportesBeanUI implements Serializable {
                 YearMonth ym = YearMonth.of(anio, mes).plusMonths(sentido);
                 anio = ym.getYear();
                 mes = ym.getMonthValue();
+            } else if (CORTE.equals(vista)) {
+                fecha = fecha.plusDays(sentido);
             } else {
                 PeriodoReporte actual = PeriodoReporte.de(tipo, fecha == null ? LocalDate.now() : fecha);
                 fecha = sentido < 0 ? actual.getInicio().minusDays(1) : actual.getFin().plusDays(1);
@@ -146,6 +157,42 @@ public class ReportesBeanUI implements Serializable {
         consultar();
     }
 
+    public void abrirCorteCaja() {
+        fechaCorte = LocalDate.now();
+        try {
+            cortePrevisualizacion = helper.previsualizarCorte(fechaCorte);
+            PrimeFaces.current().ajax().addCallbackParam("mostrar", true);
+        } catch (IllegalArgumentException ex) {
+            mensaje(FacesMessage.SEVERITY_WARN, "Corte de caja no disponible", ex.getMessage());
+            cortePrevisualizacion = null;
+            PrimeFaces.current().ajax().addCallbackParam("mostrar", false);
+
+            vista = CORTE;
+            fecha = fechaCorte;
+            consultar();
+        } catch (RuntimeException ex) {
+            mensaje(FacesMessage.SEVERITY_ERROR, "Error al calcular corte", ex.getMessage());
+            cortePrevisualizacion = null;
+            PrimeFaces.current().ajax().addCallbackParam("mostrar", false);
+        }
+    }
+
+    public void confirmarCorte() {
+        try {
+            Integer idUsuario = 1;
+            helper.registrarCorte(fechaCorte, idUsuario);
+            mensaje(FacesMessage.SEVERITY_INFO, "Corte exitoso", "El corte del día " + fechaCorte + " se ha guardado.");
+            cortePrevisualizacion = null;
+
+            vista = CORTE;
+            fecha = fechaCorte;
+            consultar();
+
+            PrimeFaces.current().executeScript("PF('dlgCorteCaja').hide()");
+        } catch (Exception ex) {
+            mensaje(FacesMessage.SEVERITY_ERROR, "Error al guardar", ex.getMessage());
+        }
+    }
     /**
      * Tickets que se muestran: todos los del periodo o, si se escribió un número en el buscador, el que tenga ese
      * folio ("3", "03" o "#000003" encuentran el mismo ticket).
@@ -327,4 +374,10 @@ public class ReportesBeanUI implements Serializable {
     public List<Proveedor> getProveedores() {
         return proveedores;
     }
+
+    public CorteCaja getCortePrevisualizacion() { return cortePrevisualizacion; }
+
+    public LocalDate getFechaCorte() { return fechaCorte; }
+
+    public CorteCaja getCorteConsultado() { return corteConsultado; }
 }

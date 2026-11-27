@@ -28,7 +28,7 @@ public class ServiceLocator {
     private static BitacoraDAO bitacoraDAO;
     private static ReporteDAO reporteDAO;
     private static DevolucionDAO devolucionDAO;
-
+    private static CorteCajaDAO corteCajaDAO;
     private static EntityManager getEntityManager(){
         return HibernateUtil.getEntityManager();
     }
@@ -151,4 +151,10 @@ public class ServiceLocator {
         return devolucionDAO;
     }
 
+    public static CorteCajaDAO getInstanceCorteCajaDAO() {
+        if (corteCajaDAO == null) {
+            corteCajaDAO = new CorteCajaDAO(getEntityManager());
+        }
+        return corteCajaDAO;
+    }
 }
