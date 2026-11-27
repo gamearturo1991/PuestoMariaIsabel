@@ -57,6 +57,7 @@ public class MenuBeanUI implements Serializable {
         items.add(new ItemMenu("Proveedores", "/proveedores.xhtml", true));
         items.add(new ItemMenu("Reportes y corte", "/reportes.xhtml", true));
         items.add(new ItemMenu("Bitácora", "/bitacora.xhtml", true));
+        items.add(new ItemMenu("Manual de usuario", "/manual.xhtml", true));
     }
 
     /** Si no hay sesión iniciada, manda al login (se llama en preRenderView). */
