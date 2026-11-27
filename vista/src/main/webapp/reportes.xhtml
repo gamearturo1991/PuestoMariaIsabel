@@ -23,17 +23,36 @@
         <h:form id="formReportes">
 
             <!-- ===== Pestañas ===== -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <p:selectOneButton id="vista" value="#{reportesUI.vista}" unselectable="false" styleClass="vistas-reporte">
                 <f:selectItem itemLabel="Ventas por periodo" itemValue="VENTAS" />
                 <f:selectItem itemLabel="Tickets" itemValue="TICKETS" />
                 <f:selectItem itemLabel="Ingresos y ganancia" itemValue="GANANCIA" />
                 <f:selectItem itemLabel="Estado e inventario" itemValue="INVENTARIO" />
+                <f:selectItem itemLabel="Cortes de caja" itemValue="CORTE" />
                 <p:ajax listener="#{reportesUI.cambiarVista}" update="formReportes :growl" />
             </p:selectOneButton>
 
+            <span>
+                <p:commandButton id="btnArqueo" value="Arqueo de caja" icon="pi pi-wallet"
+                                 styleClass="ui-button-warning" style="font-weight:bold; margin-right: 6px;"
+                                 actionListener="#{reportesUI.abrirArqueo}" process="@this"
+                                 update=":dlgCorte :growl"
+                                 oncomplete="if (args &amp;&amp; args.mostrar) { PF('dlgCorteCaja').show(); }" />
+                <p:commandButton id="btnCorteFinal" value="Corte final del día" icon="pi pi-lock"
+                                 styleClass="ui-button-danger" style="font-weight:bold;"
+                                 actionListener="#{reportesUI.abrirCorteFinal}" process="@this"
+                                 update=":dlgCorte :growl"
+                                 oncomplete="if (args &amp;&amp; args.mostrar) { PF('dlgCorteCaja').show(); }" />
+            </span>
+            <p:tooltip for="btnArqueo" position="bottom"
+                       value="Cuenta el efectivo de la caja y compara con lo esperado. Puedes hacerlo varias veces al día." />
+            <p:tooltip for="btnCorteFinal" position="bottom"
+                       value="Cierra el día y guarda los totales. Solo se puede hacer una vez por fecha." />
+            </div>
             <!-- ===== Filtros: ventas e ingresos ===== -->
             <h:panelGroup layout="block" styleClass="filtros-reporte"
-                          rendered="#{reportesUI.vista ne 'INVENTARIO'}">
+                          rendered="#{reportesUI.vista ne 'INVENTARIO' and reportesUI.vista ne 'CORTE'}">
                 <p:outputLabel for="tipo" value="Periodo" />
                 <p:selectOneMenu id="tipo" value="#{reportesUI.tipo}">
                     <f:selectItems value="#{reportesUI.tipos}" var="t" itemValue="#{t}" itemLabel="#{t.etiqueta}" />
@@ -41,6 +60,19 @@
 
                 <p:outputLabel for="fecha" value="Fecha dentro del periodo" />
                 <p:datePicker id="fecha" value="#{reportesUI.fecha}" pattern="dd/MM/yyyy" showIcon="true"
+                              maxdate="#{reportesUI.fechaMaxima}" />
+            </h:panelGroup>
+
+            <!-- ===== Filtros: cortes de caja ===== -->
+            <h:panelGroup layout="block" styleClass="filtros-reporte"
+                          rendered="#{reportesUI.vista eq 'CORTE'}">
+                <p:outputLabel for="tipoCorte" value="Periodo" />
+                <p:selectOneMenu id="tipoCorte" value="#{reportesUI.tipoCorte}">
+                    <f:selectItems value="#{reportesUI.tiposCorte}" var="t" itemValue="#{t}" itemLabel="#{t.etiqueta}" />
+                </p:selectOneMenu>
+
+                <p:outputLabel for="fechaCorteSel" value="Fecha dentro del periodo" />
+                <p:datePicker id="fechaCorteSel" value="#{reportesUI.fecha}" pattern="dd/MM/yyyy" showIcon="true"
                               maxdate="#{reportesUI.fechaMaxima}" />
             </h:panelGroup>
 
@@ -103,6 +135,10 @@
                 <p:commandButton value="Imprimir" icon="pi pi-print" type="button" styleClass="ui-button-flat"
                                  rendered="#{reportesUI.vista eq 'INVENTARIO'}">
                     <p:printer target="areaInventario" />
+                </p:commandButton>
+                <p:commandButton value="Imprimir" icon="pi pi-print" type="button" styleClass="ui-button-flat"
+                                 rendered="#{reportesUI.vista eq 'CORTE'}">
+                    <p:printer target="areaCorte" />
                 </p:commandButton>
                 <p:commandButton value="Exportar CSV" icon="pi pi-download" ajax="false" styleClass="ui-button-flat"
                                  rendered="#{reportesUI.vista eq 'TICKETS'}">
@@ -433,7 +469,158 @@
                 </p:dataTable>
             </h:panelGroup>
 
+            <!-- ==================================================================== -->
+            <!--  CORTES DE CAJA POR PERIODO (CONTABILIDAD)                           -->
+            <!-- ==================================================================== -->
+            <h:panelGroup id="areaCorte" layout="block" styleClass="area-reporte"
+                          rendered="#{reportesUI.vista eq 'CORTE' and reportesUI.resumenCortes ne null}">
+
+                <h2 class="titulo-reporte">Cortes de caja · #{reportesUI.resumenCortes.titulo}</h2>
+
+                <h:panelGroup layout="block" styleClass="nota-reporte"
+                              rendered="#{reportesUI.resumenCortes.diasSinCorte gt 0}">
+                    Faltan los cortes finales de #{reportesUI.resumenCortes.diasSinCorte} día(s) ya terminados de este periodo;
+                    sus ventas no están incluidas en estos totales.
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="nota-reporte"
+                              rendered="#{empty reportesUI.resumenCortes.filas}">
+                    No hay cortes finales registrados en este periodo.
+                </h:panelGroup>
+
+                <div class="kpis-reporte">
+                    <div class="kpi kpi-principal"><span class="n"><h:outputText value="#{reportesUI.resumenCortes.totalNeto}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></span><span class="t">total neto vendido</span></div>
+                    <div class="kpi"><span class="n"><h:outputText value="#{reportesUI.resumenCortes.totalEfectivo}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></span><span class="t">efectivo</span></div>
+                    <div class="kpi"><span class="n"><h:outputText value="#{reportesUI.resumenCortes.totalTransferencia}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></span><span class="t">transferencia</span></div>
+                    <div class="kpi"><span class="n"><h:outputText value="#{reportesUI.resumenCortes.totalTarjeta}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></span><span class="t">tarjeta</span></div>
+                    <div class="kpi"><span class="n"><h:outputText value="#{reportesUI.resumenCortes.totalComision}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></span><span class="t">comisiones</span></div>
+                    <div class="kpi"><span class="n"><h:outputText value="#{reportesUI.resumenCortes.totalDevoluciones}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></span><span class="t">devoluciones</span></div>
+                    <div class="kpi"><span class="n"><h:outputText value="#{reportesUI.resumenCortes.totalFaltantes}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></span><span class="t">faltantes</span></div>
+                    <div class="kpi"><span class="n"><h:outputText value="#{reportesUI.resumenCortes.totalSobrantes}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></span><span class="t">sobrantes</span></div>
+                </div>
+
+                <p:dataTable id="tablaCortes" value="#{reportesUI.resumenCortes.filas}" var="f"
+                             rendered="#{not empty reportesUI.resumenCortes.filas}">
+                    <p:column headerText="Fecha"><h:outputText value="#{f.corte.fecha}" /></p:column>
+                    <p:column headerText="Efectivo" styleClass="num"><h:outputText value="#{f.corte.totalEfectivo}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></p:column>
+                    <p:column headerText="Transferencia" styleClass="num"><h:outputText value="#{f.corte.totalTransferencia}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></p:column>
+                    <p:column headerText="Tarjeta" styleClass="num"><h:outputText value="#{f.corte.totalTarjeta}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></p:column>
+                    <p:column headerText="Devoluciones" styleClass="num"><h:outputText value="#{f.corte.totalDevoluciones}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></p:column>
+                    <p:column headerText="Comisión" styleClass="num"><h:outputText value="#{f.corte.totalComision}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></p:column>
+                    <p:column headerText="Total neto" styleClass="num"><h:outputText value="#{f.corte.totalNeto}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></p:column>
+                    <p:column headerText="Efectivo esperado" styleClass="num"><h:outputText value="#{f.efectivoEsperado}" rendered="#{f.conArqueo}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></p:column>
+                    <p:column headerText="Efectivo contado" styleClass="num"><h:outputText value="#{f.efectivoContado}" rendered="#{f.conArqueo}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></p:column>
+                    <p:column headerText="Diferencia" styleClass="num">
+                        <h:outputText value="#{f.diferencia}" rendered="#{f.conArqueo}"><f:convertNumber pattern="$#,##0.00;-$#,##0.00" /></h:outputText>
+                        <h:outputText value=" (#{f.estado})" rendered="#{f.conArqueo}" />
+                        <h:outputText value="Sin arqueo" rendered="#{not f.conArqueo}" />
+                    </p:column>
+                </p:dataTable>
+
+                <h3 class="subtitulo-reporte">Arqueos del periodo</h3>
+                <h:panelGroup layout="block" styleClass="nota-reporte"
+                              rendered="#{empty reportesUI.resumenCortes.arqueos}">
+                    No se hicieron arqueos intermedios en este periodo.
+                </h:panelGroup>
+                <p:dataTable id="tablaArqueos" value="#{reportesUI.resumenCortes.arqueos}" var="a"
+                             rendered="#{not empty reportesUI.resumenCortes.arqueos}">
+                    <p:column headerText="Fecha y hora"><h:outputText value="#{a.fecha}" /></p:column>
+                    <p:column headerText="Usuario"><h:outputText value="#{a.usuario}" /></p:column>
+                    <p:column headerText="Efectivo esperado" styleClass="num"><h:outputText value="#{a.efectivoEsperado}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></p:column>
+                    <p:column headerText="Efectivo contado" styleClass="num"><h:outputText value="#{a.efectivoContado}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></p:column>
+                    <p:column headerText="Diferencia" styleClass="num">
+                        <h:outputText value="#{a.diferencia}"><f:convertNumber pattern="$#,##0.00;-$#,##0.00" /></h:outputText>
+                        <h:outputText value=" (#{a.estado})" />
+                    </p:column>
+                </p:dataTable>
+
+                <div class="nota-reporte nota-suave" style="margin-top: 10px;">
+                    Diferencia = efectivo esperado menos efectivo contado. Positiva: faltante. Negativa: sobrante.
+                </div>
+            </h:panelGroup>
+
         </h:form>
+
+        <!-- ===== VENTANA DE ARQUEO Y CORTE FINAL ===== -->
+        <p:dialog id="dlgCorte" widgetVar="dlgCorteCaja"
+                  header="#{reportesUI.corteFinal ? 'Corte final del día' : 'Arqueo de caja'}"
+                  modal="true" resizable="false" draggable="false" width="460" styleClass="dialogo-cobro">
+            <h:form id="formCorte">
+
+                <div class="corte-header">
+                    Fecha: <span class="corte-header-value">#{reportesUI.fechaCorte}</span>
+                </div>
+
+                <div class="corte-body">
+                    <div class="corte-row">
+                        <span class="corte-row-label">Efectivo cobrado</span>
+                        <span class="corte-row-value corte-val-efectivo"><h:outputText value="#{reportesUI.cortePrevisualizacion.totalEfectivo}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></span>
+                    </div>
+                    <div class="corte-row">
+                        <h:outputText id="lblDev" styleClass="corte-row-label" value="Devoluciones (en efectivo)" />
+                        <p:tooltip for="lblDev" position="left" value="Las devoluciones se reembolsan en efectivo, así que se restan del efectivo esperado." />
+                        <span class="corte-row-value corte-val-comision">- <h:outputText value="#{reportesUI.cortePrevisualizacion.totalDevoluciones}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></span>
+                    </div>
+                    <div class="corte-row">
+                        <span class="corte-row-label">Transferencia</span>
+                        <span class="corte-row-value corte-val-transferencia"><h:outputText value="#{reportesUI.cortePrevisualizacion.totalTransferencia}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></span>
+                    </div>
+                    <div class="corte-row">
+                        <span class="corte-row-label">Tarjeta</span>
+                        <span class="corte-row-value corte-val-tarjeta"><h:outputText value="#{reportesUI.cortePrevisualizacion.totalTarjeta}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></span>
+                    </div>
+                    <div class="corte-row">
+                        <h:outputText id="lblCom" styleClass="corte-row-label" value="Comisión de tarjeta" />
+                        <p:tooltip for="lblCom" position="left" value="4.5% de lo pagado con tarjeta. Es un costo del negocio y se resta del total neto." />
+                        <span class="corte-row-value corte-val-comision">- <h:outputText value="#{reportesUI.cortePrevisualizacion.totalComision}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></span>
+                    </div>
+                    <div class="corte-total-box">
+                        <span class="corte-total-label">Total neto del día</span>
+                        <span class="corte-total-value"><h:outputText value="#{reportesUI.cortePrevisualizacion.totalNeto}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></span>
+                    </div>
+                    <div class="corte-row">
+                        <h:outputText id="lblFondo" styleClass="corte-row-label" value="Fondo provisional (efectivo de ayer)" />
+                        <p:tooltip for="lblFondo" position="left" value="Efectivo del día anterior, de donde se toma el cambio. Es solo una referencia: no entra en la cuenta del efectivo esperado." />
+                        <span class="corte-row-value "><h:outputText value="#{reportesUI.fondoProvisional}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></span>
+                    </div>
+                    <div class="corte-row" style="margin-top: 14px;">
+                        <p:outputLabel for="contado" value="Efectivo contado en caja" />
+                        <p:inputNumber id="contado" value="#{reportesUI.efectivoContado}" symbol="$" decimalPlaces="2"
+                                       minValue="0" disabled="#{reportesUI.resultadoArqueo ne null}" />
+                        <p:tooltip for="contado" position="top" value="Escribe todo el efectivo que hay en la caja ahora mismo." />
+                    </div>
+
+                    <h:panelGroup id="resultadoArqueo" layout="block" rendered="#{reportesUI.resultadoArqueo ne null}"
+                                  style="margin-top: 14px; padding: 12px; border-radius: 8px; background: #f4f4f5;">
+                    <div class="corte-row">
+                        <span class="corte-row-label">Efectivo esperado</span>
+                        <span class="corte-row-value "><h:outputText value="#{reportesUI.resultadoArqueo.efectivoEsperado}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></span>
+                    </div>
+                    <div class="corte-row">
+                        <span class="corte-row-label">Efectivo contado</span>
+                        <span class="corte-row-value "><h:outputText value="#{reportesUI.resultadoArqueo.efectivoContado}"><f:convertNumber pattern="$#,##0.00" /></h:outputText></span>
+                    </div>
+                        <div class="corte-total-box">
+                            <h:outputText id="lblEstado" styleClass="corte-total-label" value="#{reportesUI.resultadoArqueo.estado}" />
+                            <p:tooltip for="lblEstado" position="left" value="Diferencia = esperado menos contado. Positivo: faltante. Negativo: sobrante." />
+                            <span class="corte-total-value"><h:outputText value="#{reportesUI.resultadoArqueo.diferencia}"><f:convertNumber pattern="$#,##0.00;-$#,##0.00" /></h:outputText></span>
+                        </div>
+                        <div class="corte-nota">Positivo: faltante. Negativo: sobrante.</div>
+                    </h:panelGroup>
+                </div>
+
+                <div class="corte-footer">
+                    <p:commandButton value="Cerrar" type="button" styleClass="ui-button-flat" onclick="PF('dlgCorteCaja').hide()" />
+                    <p:commandButton id="btnEnviar" value="Enviar" icon="pi pi-check" styleClass="ui-button-success"
+                                     actionListener="#{reportesUI.enviarCorte}"
+                                     disabled="#{reportesUI.resultadoArqueo ne null}"
+                                     process="@form" update="formCorte :formReportes :growl" />
+                    <p:tooltip for="btnEnviar" position="top"
+                               value="#{reportesUI.corteFinal ? 'Calcula la diferencia y cierra el día.' : 'Calcula la diferencia y la anota en la bitácora.'}" />
+                </div>
+
+            </h:form>
+        </p:dialog>
 
     </ui:define>
 

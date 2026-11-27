@@ -88,3 +88,21 @@
     margin-bottom: 8px;
     font-size: 14px;
 }
+
+/* Selectores de fecha del historial: ancho normal, con el botón del calendario al lado */
+.filtros-merma .ui-datepicker {
+    display: inline-flex;
+    width: 220px;
+    max-width: 100%;
+    justify-self: start;
+}
+
+.filtros-merma .ui-datepicker .ui-inputfield {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+}
+
+.filtros-merma .ui-datepicker .ui-datepicker-trigger {
+    flex: 0 0 auto;
+}

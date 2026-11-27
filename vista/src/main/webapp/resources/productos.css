@@ -115,3 +115,23 @@
     gap: 8px;
     margin-top: 18px;
 }
+
+/* Lupa dentro de la barra de búsqueda (Productos e Inventario) */
+.productos-barra .buscador {
+    position: relative;
+    display: inline-block;
+}
+
+.productos-barra .buscador > i {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    line-height: 1;
+}
+
+.productos-barra .buscador input {
+    padding-left: 34px;
+    box-sizing: border-box;
+}

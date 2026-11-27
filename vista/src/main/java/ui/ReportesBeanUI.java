@@ -1,10 +1,15 @@
 package ui;
 
+import Puesto.maria.isabel.delegate.AccionBitacora;
 import Puesto.maria.isabel.delegate.ExportadorCsv;
+import Puesto.maria.isabel.delegate.PeriodoCortes;
+import Puesto.maria.isabel.delegate.ResultadoArqueo;
+import Puesto.maria.isabel.delegate.ResumenCortes;
 import Puesto.maria.isabel.delegate.PeriodoReporte;
 import Puesto.maria.isabel.delegate.ReporteGanancia;
 import Puesto.maria.isabel.delegate.ReporteInventario;
 import Puesto.maria.isabel.delegate.ReporteVentas;
+import helper.BitacoraHelper;
 import helper.CategoriaHelper;
 import helper.ProveedorHelper;
 import helper.ReporteHelper;
@@ -12,11 +17,17 @@ import jakarta.enterprise.context.SessionScoped;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.model.SelectItem;
+import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import puesto.maria.entity.Categoria;
 import puesto.maria.entity.Proveedor;
+import org.primefaces.PrimeFaces;
+import puesto.maria.entity.CorteCaja;
+import puesto.maria.entity.Usuario;
+
+import java.math.BigDecimal;
 
 import java.io.ByteArrayInputStream;
 import java.io.Serializable;
@@ -41,12 +52,19 @@ public class ReportesBeanUI implements Serializable {
     public static final String GANANCIA = "GANANCIA";
     public static final String INVENTARIO = "INVENTARIO";
     public static final String TICKETS = "TICKETS";
+    public static final String CORTE = "CORTE";
+    public static final String MODO_ARQUEO = "ARQUEO";
+    public static final String MODO_FINAL = "FINAL";
 
     private static final Locale ES_MX = Locale.forLanguageTag("es-MX");
 
     private final ReporteHelper helper = new ReporteHelper();
     private final CategoriaHelper categoriaHelper = new CategoriaHelper();
     private final ProveedorHelper proveedorHelper = new ProveedorHelper();
+    private final BitacoraHelper bitacoraHelper = new BitacoraHelper();
+
+    @Inject
+    private LoginBeanUI loginUI;
 
     private String vista = VENTAS;
 
@@ -66,6 +84,18 @@ public class ReportesBeanUI implements Serializable {
     private ReporteVentas ventas;
     private ReporteGanancia ganancia;
     private ReporteInventario inventario;
+
+    /** Corte de caja: periodo que se consulta y su resumen. */
+    private PeriodoCortes tipoCorte = PeriodoCortes.DIA;
+    private ResumenCortes resumenCortes;
+
+    /** Ventana de arqueo / corte final. */
+    private String modoCorte = MODO_ARQUEO;
+    private CorteCaja cortePrevisualizacion;
+    private LocalDate fechaCorte;
+    private BigDecimal fondoProvisional = BigDecimal.ZERO;
+    private BigDecimal efectivoContado;
+    private ResultadoArqueo resultadoArqueo;
 
     private List<Categoria> categorias = new ArrayList<>();
     private List<Proveedor> proveedores = new ArrayList<>();
@@ -87,6 +117,8 @@ public class ReportesBeanUI implements Serializable {
         ventas = null;
         ganancia = null;
         inventario = null;
+        resumenCortes = null;
+        tipoCorte = PeriodoCortes.DIA;
         try {
             categorias = categoriaHelper.listar();
             proveedores = proveedorHelper.listar();
@@ -99,7 +131,10 @@ public class ReportesBeanUI implements Serializable {
     /** Genera el reporte de la pestaña activa con los parámetros elegidos. */
     public void consultar() {
         try {
-            if (GANANCIA.equals(vista)) {
+            if (CORTE.equals(vista)) {
+                resumenCortes = null;
+                resumenCortes = helper.resumenCortes(tipoCorte, fecha);
+            } else if (GANANCIA.equals(vista)) {
                 ganancia = null;
                 ganancia = helper.ganancia(helper.periodo(tipo, fecha));
             } else if (INVENTARIO.equals(vista)) {
@@ -135,6 +170,9 @@ public class ReportesBeanUI implements Serializable {
                 YearMonth ym = YearMonth.of(anio, mes).plusMonths(sentido);
                 anio = ym.getYear();
                 mes = ym.getMonthValue();
+            } else if (CORTE.equals(vista)) {
+                LocalDate base = fecha == null ? LocalDate.now() : fecha;
+                fecha = sentido < 0 ? tipoCorte.inicio(base).minusDays(1) : tipoCorte.fin(base).plusDays(1);
             } else {
                 PeriodoReporte actual = PeriodoReporte.de(tipo, fecha == null ? LocalDate.now() : fecha);
                 fecha = sentido < 0 ? actual.getInicio().minusDays(1) : actual.getFin().plusDays(1);
@@ -144,6 +182,81 @@ public class ReportesBeanUI implements Serializable {
             return;
         }
         consultar();
+    }
+
+    /* ======================== arqueo y corte final ======================== */
+
+    /** Abre la ventana para contar el efectivo de la caja (se pueden hacer varios en el día). */
+    public void abrirArqueo() {
+        abrirCorte(MODO_ARQUEO);
+    }
+
+    /** Abre la ventana del corte final, que cierra el día (uno por fecha). */
+    public void abrirCorteFinal() {
+        abrirCorte(MODO_FINAL);
+    }
+
+    private void abrirCorte(String modo) {
+        PrimeFaces.current().ajax().addCallbackParam("mostrar", false);
+        try {
+            fechaCorte = LocalDate.now();
+            if (MODO_FINAL.equals(modo) && helper.obtenerCorte(fechaCorte) != null) {
+                mensaje(FacesMessage.SEVERITY_WARN, "Corte final ya registrado",
+                        "El corte final de hoy ya se hizo. Puedes consultarlo en la pestaña Cortes de caja.");
+                return;
+            }
+            modoCorte = modo;
+            cortePrevisualizacion = helper.previsualizarCorte(fechaCorte);
+            fondoProvisional = helper.fondoProvisional(fechaCorte);
+            efectivoContado = null;
+            resultadoArqueo = null;
+            PrimeFaces.current().ajax().addCallbackParam("mostrar", true);
+        } catch (IllegalArgumentException ex) {
+            mensaje(FacesMessage.SEVERITY_WARN, "Corte de caja no disponible", ex.getMessage());
+        } catch (RuntimeException ex) {
+            mensaje(FacesMessage.SEVERITY_ERROR, "Error al calcular el corte", ex.getMessage());
+        }
+    }
+
+    /**
+     * Botón Enviar de la ventana: compara el efectivo contado con el esperado. En un arqueo solo lo anota en la
+     * bitácora; en el corte final además guarda los totales del día.
+     */
+    public void enviarCorte() {
+        try {
+            Usuario usuario = loginUI.getUsuario();
+            if (usuario == null || usuario.getId() == null) {
+                mensaje(FacesMessage.SEVERITY_ERROR, "Sin sesión", "Inicia sesión para hacer el corte.");
+                return;
+            }
+            if (MODO_FINAL.equals(modoCorte)) {
+                resultadoArqueo = helper.registrarCorte(fechaCorte, usuario.getId(), efectivoContado);
+                bitacoraHelper.registrar(usuario, AccionBitacora.CORTE_CAJA, "corte_caja",
+                        resultadoArqueo.getIdCorte(), null, resultadoArqueo.aTextoBitacora(), null);
+                mensaje(FacesMessage.SEVERITY_INFO, "Corte final registrado",
+                        "Día " + fechaCorte + ": " + resultadoArqueo.getEstado());
+                vista = CORTE;
+                tipoCorte = PeriodoCortes.DIA;
+                fecha = fechaCorte;
+                consultar();
+            } else {
+                resultadoArqueo = helper.arqueo(fechaCorte, efectivoContado);
+                bitacoraHelper.registrar(usuario, AccionBitacora.ARQUEO_CAJA, "corte_caja", null, null,
+                        resultadoArqueo.aTextoBitacora(), null);
+                mensaje(FacesMessage.SEVERITY_INFO, "Arqueo registrado", resultadoArqueo.getEstado());
+                if (CORTE.equals(vista)) {
+                    consultar();
+                }
+            }
+        } catch (IllegalArgumentException ex) {
+            mensaje(FacesMessage.SEVERITY_WARN, "No se pudo hacer el corte", ex.getMessage());
+        } catch (RuntimeException ex) {
+            mensaje(FacesMessage.SEVERITY_ERROR, "Error al guardar el corte", ex.getMessage());
+        }
+    }
+
+    public boolean isCorteFinal() {
+        return MODO_FINAL.equals(modoCorte);
     }
 
     /**
@@ -326,5 +439,51 @@ public class ReportesBeanUI implements Serializable {
 
     public List<Proveedor> getProveedores() {
         return proveedores;
+    }
+
+    public CorteCaja getCortePrevisualizacion() {
+        return cortePrevisualizacion;
+    }
+
+    /** Efectivo que debería haber en la caja ahora (cobrado en efectivo menos devoluciones). */
+    public BigDecimal getEfectivoEsperado() {
+        return cortePrevisualizacion == null ? BigDecimal.ZERO
+                : Puesto.maria.isabel.delegate.DelegateCorteCaja.efectivoEsperado(cortePrevisualizacion);
+    }
+
+    public LocalDate getFechaCorte() {
+        return fechaCorte;
+    }
+
+    public BigDecimal getFondoProvisional() {
+        return fondoProvisional;
+    }
+
+    public BigDecimal getEfectivoContado() {
+        return efectivoContado;
+    }
+
+    public void setEfectivoContado(BigDecimal efectivoContado) {
+        this.efectivoContado = efectivoContado;
+    }
+
+    public ResultadoArqueo getResultadoArqueo() {
+        return resultadoArqueo;
+    }
+
+    public PeriodoCortes getTipoCorte() {
+        return tipoCorte;
+    }
+
+    public void setTipoCorte(PeriodoCortes tipoCorte) {
+        this.tipoCorte = tipoCorte;
+    }
+
+    public PeriodoCortes[] getTiposCorte() {
+        return PeriodoCortes.values();
+    }
+
+    public ResumenCortes getResumenCortes() {
+        return resumenCortes;
     }
 }

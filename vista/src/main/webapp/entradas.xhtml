@@ -45,7 +45,7 @@
                         <p:outputLabel for="producto" value="Producto" />
                         <p:autoComplete id="producto" value="#{entradaUI.productoSeleccionado}"
                                         completeMethod="#{entradaUI.completarProducto}"
-                                        var="pr" itemLabel="#{pr.codigoCorto} · #{pr.nombre}#{pr.activo ? '' : ' (deshabilitado)'}"
+                                        var="pr" itemLabel="#{empty pr ? '' : pr.codigoCorto}#{empty pr ? '' : ' · '}#{empty pr ? '' : pr.nombre}#{empty pr or pr.activo ? '' : ' (deshabilitado)'}"
                                         itemValue="#{pr}" forceSelection="true"
                                         minQueryLength="1" maxResults="20" scrollHeight="220" queryDelay="200"
                                         placeholder="Código o nombre del producto" emptyMessage="Sin resultados">
