@@ -185,15 +185,31 @@
 
             <!-- ============================ 11 ============================ -->
             <h2 id="reportes">11. Reportes</h2>
-            <p>Elige semana o mes y la fecha. Los periodos son semana de lunes a domingo o mes completo, y no se pueden consultar periodos futuros. Solo cuentan las ventas completadas. Hay cuatro pestañas:</p>
+            <p>Elige semana o mes y la fecha. Los periodos son semana de lunes a domingo o mes completo, y no se pueden consultar periodos futuros. Solo cuentan las ventas completadas. Hay cinco pestañas:</p>
             <ul>
                 <li><b>Ventas por periodo:</b> total vendido, tickets, piezas, ventas por día, por método de pago, por categoría y por producto.</li>
                 <li><b>Tickets:</b> cada venta como tarjeta con su folio (por ejemplo #000003), productos, cliente (con RFC si lo hubo) y cómo se pagó. El buscador acepta el número de folio. Aquí también se exporta a CSV.</li>
                 <li><b>Ingresos y ganancia:</b> ingresos, costo de lo vendido, mermas y comisiones de tarjeta; de ahí sale la ganancia neta.</li>
                 <li><b>Estado e inventario:</b> existencia al inicio y al final del mes, lo recibido, lo vendido y la rotación de cada producto. La rotación indica cuántas veces se renovó el inventario: piezas vendidas entre el promedio de existencia.</li>
+                <li><b>Cortes de caja:</b> los cortes guardados, sumados por día, semana, mes, bimestre, semestre o año. Se explica abajo.</li>
             </ul>
             <p>Las devoluciones se restan del total vendido, de las piezas y de los ingresos del periodo en que se registraron; una nota en la pantalla indica cuántas hubo y por cuánto.</p>
             <p>El botón <b>Imprimir</b> genera la versión para imprimir o guardar como PDF.</p>
+
+            <h3>Corte de caja y arqueo</h3>
+            <p>El corte sirve para saber cuánto se vendió y comprobar que el efectivo de la caja cuadra con lo que el sistema calcula. Los botones están arriba, en <b>Reportes y corte</b>. Las transferencias y los pagos con tarjeta son automáticos; lo que se revisa es el <b>efectivo</b>.</p>
+            <p>El efectivo que debería haber es el efectivo cobrado menos las devoluciones, que se reembolsan en efectivo. El <i>fondo provisional</i> (el efectivo del día anterior, de donde se toma el cambio) solo se muestra como referencia y no entra en la cuenta.</p>
+            <h3>Arqueo de caja (se puede hacer varias veces al día)</h3>
+            <ol>
+                <li>Pulsa <b>Arqueo de caja</b>. Verás lo cobrado en el día por método de pago, las devoluciones y la comisión de tarjeta.</li>
+                <li>Cuenta el dinero que hay en la caja y escríbelo en <b>Efectivo contado en caja</b>.</li>
+                <li>Pulsa <b>Enviar</b>. El sistema muestra el efectivo esperado, el contado y la <b>diferencia</b>.</li>
+            </ol>
+            <p>La diferencia es el efectivo esperado menos el contado. Si es <b>positiva</b>, hay un <b>faltante</b> (falta dinero). Si es <b>negativa</b>, hay un <b>sobrante</b> (hay dinero de más). Cada arqueo cuenta todo el efectivo del día hasta ese momento, así que el dinero se queda en la caja después de contarlo. Los arqueos no impiden vender y quedan registrados en la Bitácora.</p>
+            <h3>Corte final del día</h3>
+            <p>Al terminar el día, pulsa <b>Corte final del día</b>, cuenta el efectivo y pulsa <b>Enviar</b>. Se guardan los totales del día (efectivo, transferencia, tarjeta, comisiones, devoluciones y total neto) junto con lo contado y la diferencia. Solo puede haber <b>un corte final por fecha</b> y no se puede deshacer.</p>
+            <h3>Consultar los cortes</h3>
+            <p>En la pestaña <b>Cortes de caja</b> elige el periodo (día, semana, mes, bimestre, semestre o año) y una fecha dentro de él. Verás el total neto vendido, lo cobrado por método, comisiones, devoluciones, faltantes y sobrantes, la lista de cortes finales y los arqueos del periodo. Si algún día ya terminado no tiene corte final, aparece un aviso: sus ventas no están sumadas en esos totales. Con <b>Imprimir</b> sacas la versión para imprimir o guardar como PDF.</p>
 
             <!-- ============================ 12 ============================ -->
             <h2 id="bitacora">12. Bitácora</h2>
@@ -230,6 +246,10 @@
             <p>Ve a <b>Mermas y devoluciones → Devoluciones</b>, busca la venta por su folio y sigue los pasos de la sección 9. Si no recuerdas el folio, búscalo en <b>Reportes → Tickets</b>.</p>
             <h3>No me deja devolver más piezas de una venta.</h3>
             <p>Ya se devolvieron todas, o parte de ellas, en una devolución anterior. La columna <i>Ya devueltas</i> muestra cuántas.</p>
+            <h3>Me salió faltante o sobrante en el corte.</h3>
+            <p>Revisa que contaste todo el efectivo, que las devoluciones del día estén registradas y que no se haya dado cambio de otro dinero. Puedes hacer otro arqueo las veces que quieras; la diferencia positiva es faltante y la negativa es sobrante. El corte final del día solo se hace una vez.</p>
+            <h3>Se me olvidó hacer el corte de un día.</h3>
+            <p>El corte final solo se puede hacer con la fecha de hoy. Ese día aparecerá en Cortes de caja como día sin corte y sus ventas no se sumarán a los totales del periodo; las ventas siguen en Reportes.</p>
             <h3>Marqué como facturado a un cliente por error.</h3>
             <p>Usa <b>Deshacer factura</b> en Clientes y facturación y escribe el motivo.</p>
             <h3>El cliente cambió de nombre o de régimen.</h3>

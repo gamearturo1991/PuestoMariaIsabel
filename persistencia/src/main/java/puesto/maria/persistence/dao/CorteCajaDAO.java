@@ -26,6 +26,15 @@ public class CorteCajaDAO extends AbstractDAO<CorteCaja> {
         return resultado.isEmpty() ? null : resultado.get(0);
     }
 
+    public List<CorteCaja> listarPorRango(LocalDate desde, LocalDate hasta) {
+        return execute(em -> em.createQuery(
+                        "SELECT c FROM CorteCaja c WHERE c.fecha BETWEEN :desde AND :hasta ORDER BY c.fecha",
+                        CorteCaja.class)
+                .setParameter("desde", desde)
+                .setParameter("hasta", hasta)
+                .getResultList());
+    }
+
     public void guardarCorte(Integer idUsuario, CorteCaja corte) {
         execute(em -> {
             Usuario user = em.find(Usuario.class, idUsuario);
